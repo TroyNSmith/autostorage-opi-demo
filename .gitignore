@@ -1,0 +1,12 @@
+# User settings
+.vscode/
+
+# UV environment
+.venv/
+uv.lock
+
+# Python
+__pycache__/
+
+# Output directory
+out/

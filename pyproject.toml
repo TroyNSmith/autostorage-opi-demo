@@ -1,0 +1,17 @@
+[project]
+name = "autostorage-opi-demo"
+version = "0.1.0"
+description = "autostorage v0.0.13 + OPI demo."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "autostorage==0.0.13",
+    "orca-pi==2.0.0",
+    "xyzrender==0.3.8",
+]
+
+[tool.ty.environment]
+python = ".venv/bin/python"
+
+[tool.ty.rules]
+unsupported-operator = "ignore"
