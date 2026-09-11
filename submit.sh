@@ -35,3 +35,4 @@ module purge
 module load ORCA/6.1.1-gompi-2023b-avx2
 
 uv run python autostorage_opi_demo/1_GOAT.py
+uv run python autostorage_opi_demo/2_OPT.py

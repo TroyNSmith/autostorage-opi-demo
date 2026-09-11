@@ -44,7 +44,7 @@ with db.session() as sess:
         program_version=ORCA_VERSION,
     )
     # Ensure xtb_model is in the current session
-    sess.merge(xtb_model)
+    sess.add(xtb_model)
 
     pent2ene_geo = structure_to_geometry(pent2ene)
     # Query whether the calculation exists by checking if pent2ene's InChI is tagged

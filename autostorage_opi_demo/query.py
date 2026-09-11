@@ -74,23 +74,22 @@ def calculation(
     target_identity = IdentityRow.from_geometry(geo, algorithm=Algorithm.RDKIT_INCHI)
     target_inchi = target_identity.value
 
-    with sess:
-        identity_stmt = select(IdentityRow).where(
-            IdentityRow.algorithm == Algorithm.RDKIT_INCHI,
-            IdentityRow.value == target_inchi,
-        )
-        identities = sess.execute(identity_stmt).all()
-        for (ident,) in identities:
-            if not ident.stationary_points:
-                continue
+    identity_stmt = select(IdentityRow).where(
+        IdentityRow.algorithm == Algorithm.RDKIT_INCHI,
+        IdentityRow.value == target_inchi,
+    )
+    identities = sess.execute(identity_stmt).all()
+    for (ident,) in identities:
+        if not ident.stationary_points:
+            continue
 
-            for stp in ident.stationary_points:
-                sess.merge(stp)
-                if (
-                    stp.calculation
-                    and stp.calculation.model_id == model.id
-                    and stp.calculation.calc_type == calc_type
-                ):
-                    return stp.calculation.id
+        for stp in ident.stationary_points:
+            sess.merge(stp)
+            if (
+                stp.calculation
+                and stp.calculation.model_id == model.id
+                and stp.calculation.calc_type == calc_type
+            ):
+                return stp.calculation.id
 
     return None

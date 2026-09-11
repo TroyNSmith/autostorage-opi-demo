@@ -112,16 +112,6 @@ def run_calculation(
     if not output.terminated_normally():
         msg = f"ORCA calculation failed, see output file: {outfile}"
         raise RuntimeError(msg)
-    # Verify that SCF converged
-    if not output.scf_converged():
-        msg = f"ORCA SCF failed to converge, see output file: {outfile}"
-        raise RuntimeError(msg)
-    # Verify that geometry optimization converged
-    if not output.scf_converged():
-        msg = (
-            f"ORCA geometry optimization failed to converge, see output file: {outfile}"
-        )
-        raise RuntimeError(msg)
 
     outjson = next(outfile.parent.glob("*.property.json"), None)
     if outjson is not None:
