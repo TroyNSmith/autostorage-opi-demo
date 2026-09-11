@@ -1,6 +1,6 @@
 """Query functions."""
 
-from automol import Algorithm
+from automol import RDKIT_INCHI
 from autostorage import GeometryRow, IdentityRow, ModelRow
 from sqlalchemy.orm import Session as SASession
 from sqlmodel import Session as SMSession
@@ -71,11 +71,11 @@ def calculation(
     Returns: Calculation.id or None
     """
     # Create a temporary GeometryRow to get the InChI
-    target_identity = IdentityRow.from_geometry(geo, algorithm=Algorithm.RDKIT_INCHI)
+    target_identity = IdentityRow.from_geometry(geo, algorithm=RDKIT_INCHI)
     target_inchi = target_identity.value
 
     identity_stmt = select(IdentityRow).where(
-        IdentityRow.algorithm == Algorithm.RDKIT_INCHI,
+        IdentityRow.algorithm == RDKIT_INCHI,
         IdentityRow.value == target_inchi,
     )
     identities = sess.execute(identity_stmt).all()

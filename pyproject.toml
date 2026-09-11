@@ -5,7 +5,10 @@ description = "autostorage v0.0.15 + OPI demo."
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
 dependencies = [
-    "autostorage==0.0.15",
+    "automol==0.0.24",
+    "autostorage==0.0.16",
+    # "automol",
+    # "autostorage",
     "irmsd>=0.1.1",
     "orca-pi==2.0.0",
 ]
@@ -31,3 +34,7 @@ ignore = [
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.uv.sources]
+# autostorage = { path = "../autostorage", editable = true }
+# automol = { path = "../automol", editable = true }

@@ -1,5 +1,6 @@
 """Global Optimization of Pent-2-ene with the xTB model."""
 
+from automol.ident import AlgorithmRegistry
 from autostorage import (
     CalculationGeometryLink,
     Database,
@@ -9,6 +10,7 @@ from autostorage import (
 )
 from opi.input.structures import Properties, Structure
 
+import conf_ident  # noqa: F401
 import query
 from utils import (
     DB_PATH,
@@ -21,7 +23,7 @@ from utils import (
 )
 
 # Set calculation inputs
-calc_input = CalculationInput(memory=5700, ncores=8)
+calc_input = CalculationInput(memory=8000, ncores=1)
 calc_type = CalculationType.GOAT
 
 # Build the working directory

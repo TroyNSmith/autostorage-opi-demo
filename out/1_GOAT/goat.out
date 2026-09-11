@@ -165,19 +165,19 @@ interface, adapt or use parts of their codes:
    LAPACKE interface :  Fast linear algebra routines
    SCALAPACK package :  Parallel linear algebra routines
    Shared memory     :  Shared parallel matrices
-   BLAS/LAPACK       :  OpenBLAS 0.3.29  USE64BITINT DYNAMIC_ARCH NO_AFFINITY Zen SINGLE_THREADED
-        Core in use  :  Zen
+   BLAS/LAPACK       :  OpenBLAS 0.3.29  USE64BITINT DYNAMIC_ARCH NO_AFFINITY Haswell SINGLE_THREADED
+        Core in use  :  Haswell
    Copyright (c) 2011-2014, The OpenBLAS Project
 
 
   ***********************************
-  * Starting time: Fri Sep 11 15:22:42 2026
-  * Host name:     a1-8
-  * Process ID:    205087
-  * Working dir.:  /tmp/lscratch/tns97255/48100992/out/1_GOAT
+  * Starting time: Fri Sep 11 15:52:02 2026
+  * Host name:     ENGR301476L
+  * Process ID:    278423
+  * Working dir.:  /home/tns97255/coding/autodev/autostorage-opi-demo/out/1_GOAT
   ***********************************
 
-NOTE: MaxCore=5700 MB was set to SCF,MP2,MDCI,CIPSI,MRCI,RASCI and CIS
+NOTE: MaxCore=8000 MB was set to SCF,MP2,MDCI,CIPSI,MRCI,RASCI and CIS
       => If you want to overwrite this, your respective input block should be placed after the MaxCore statement
 Your calculation utilizes the semiempirical GFN2-xTB method
 Please cite in your paper:
@@ -210,9 +210,9 @@ WARNING: Found dipole moment calculation with XTB calculation
 NAME = goat.inp
 |  1> !xtb
 |  2> !goat
-|  3> %maxcore 5700
+|  3> %maxcore 8000
 |  4> %pal
-|  5>     nprocs 8
+|  5>     nprocs 1
 |  6> end
 |  7> 
 |  8> %output
@@ -484,7 +484,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Seibert, P. Shushkov, S. Spicher, M. Stahn, M. Steiner, T. Strunk,
    J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2026/09/11 at 15:22:44.774     
+ * started run on 2026/09/11 at 15:52:02.427     
    ID    Z sym.   atoms
     1    6 C      1-5
     2    1 H      6-15
@@ -493,11 +493,10 @@ CARTESIAN COORDINATES (A.U.)
           |                Calculation Setup                |
            -------------------------------------------------
 
-          program call               : /apps/eb/ORCA/6.1.1-gompi-2023b-avx2/bin/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 8 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
-          hostname                   : a1-8
+          program call               : /home/tns97255/orca_6_1_1/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 1 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
           calculation namespace      : goat
           coordinate file            : goat_XTB.xyz
-          omp threads                :                     8
+          omp threads                :                     1
 
 
            -------------------------------------------------
@@ -559,9 +558,9 @@ CARTESIAN COORDINATES (A.U.)
    6    -16.0116590 -0.510505E-04  0.346E-02    5.15       1.0  T
    7    -16.0116607 -0.166811E-05  0.244E-03    5.15      10.6  T
    8    -16.0116607 -0.213846E-07  0.107E-03    5.15      24.1  T
-   9    -16.0116607 -0.746891E-09  0.221E-04    5.15     116.8  T
-  10    -16.0116607 -0.119581E-09  0.909E-05    5.15     283.9  T
-  11    -16.0116607 -0.495248E-11  0.139E-05    5.15    1859.5  T
+   9    -16.0116607 -0.746898E-09  0.221E-04    5.15     116.8  T
+  10    -16.0116607 -0.119588E-09  0.909E-05    5.15     283.9  T
+  11    -16.0116607 -0.497025E-11  0.139E-05    5.15    1859.5  T
 
    *** convergence criteria satisfied after 11 iterations ***
 
@@ -587,14 +586,14 @@ CARTESIAN COORDINATES (A.U.)
                   HL-Gap            0.1890958 Eh            5.1456 eV
              Fermi-level           -0.2861948 Eh           -7.7878 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.021 sec
- SCC setup                      ...        0 min,  0.000 sec (  2.285%)
- Dispersion                     ...        0 min,  0.000 sec (  0.857%)
- classical contributions        ...        0 min,  0.000 sec (  0.671%)
- integral evaluation            ...        0 min,  0.001 sec (  2.537%)
- iterations                     ...        0 min,  0.018 sec ( 83.875%)
- molecular gradient             ...        0 min,  0.002 sec (  8.599%)
- printout                       ...        0 min,  0.000 sec (  1.081%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.010 sec
+ SCC setup                      ...        0 min,  0.000 sec (  1.095%)
+ Dispersion                     ...        0 min,  0.000 sec (  0.561%)
+ classical contributions        ...        0 min,  0.000 sec (  0.173%)
+ integral evaluation            ...        0 min,  0.001 sec (  6.093%)
+ iterations                     ...        0 min,  0.007 sec ( 68.899%)
+ molecular gradient             ...        0 min,  0.002 sec ( 21.313%)
+ printout                       ...        0 min,  0.000 sec (  1.604%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
@@ -610,7 +609,7 @@ CARTESIAN COORDINATES (A.U.)
          :: -> dispersion             -0.007354657622 Eh    ::
          :: repulsion energy           0.246867108884 Eh    ::
          :: add. restraining           0.000000000000 Eh    ::
-         :: total charge               0.000000000000 e     ::
+         :: total charge              -0.000000000000 e     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -623,16 +622,16 @@ Property printout bound to 'properties.out'
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2026/09/11 at 15:22:44.815     
+ * finished run on 2026/09/11 at 15:52:02.446     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.040 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.182 sec
- * ratio c/w:     4.535 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.019 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.016 sec
+ * ratio c/w:     0.871 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.021 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.105 sec
- * ratio c/w:     4.975 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.010 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.008 sec
+ * ratio c/w:     0.824 speedup
 
 
 -------------------------   --------------------
@@ -671,7 +670,7 @@ CARTESIAN GRADIENT
   15   H   :    0.002925599    0.002945607   -0.022237185
 
 Difference to translation invariance:
-           :   -0.0000000000    0.0000000000    0.0000000000
+           :    0.0000000000    0.0000000000    0.0000000000
 
 Difference to rotation invariance:
            :   -0.0000000038   -0.0000000019    0.0000000079
@@ -722,7 +721,7 @@ Storing new coordinates                 .... done
           RMS gradient        0.0084062175            0.0001000000      NO
           MAX gradient        0.0191117218            0.0003000000      NO
           RMS step            0.0333176804            0.0020000000      NO
-          MAX step            0.0879858224            0.0040000000      NO
+          MAX step            0.0879858223            0.0040000000      NO
           -------------------------------------------------------------------------
           ........................................................
           Max(Bonds)      0.0299      Max(Angles)    3.34
@@ -796,19 +795,19 @@ Storing new coordinates                 .... done
     ----------------------------------------------------------------------------
 
 Geometry step timings:
-Preparation and reading OPT file:      0.000 s ( 1.375 %)
-Internal coordinates            :      0.000 s ( 1.506 %)
-B/P matrices and projection     :      0.001 s (34.119 %)
-Hessian update/contruction      :      0.000 s (13.491 %)
-Making the step                 :      0.000 s (23.707 %)
-Converting the step to Cartesian:      0.000 s ( 4.126 %)
-Storing new data                :      0.000 s ( 1.834 %)
-Checking convergence            :      0.000 s ( 1.506 %)
-Final printing                  :      0.000 s (18.337 %)
+Preparation and reading OPT file:      0.000 s ( 2.691 %)
+Internal coordinates            :      0.000 s ( 1.741 %)
+B/P matrices and projection     :      0.001 s (36.728 %)
+Hessian update/contruction      :      0.000 s (13.404 %)
+Making the step                 :      0.000 s (20.739 %)
+Converting the step to Cartesian:      0.000 s ( 3.641 %)
+Storing new data                :      0.000 s ( 2.005 %)
+Checking convergence            :      0.000 s ( 1.319 %)
+Final printing                  :      0.000 s (17.625 %)
 Total time                      :      0.002 s
 
-Time for energy+gradient        :      0.050 s
-Time for complete geometry iter :      0.052 s
+Time for energy+gradient        :      0.024 s
+Time for complete geometry iter :      0.027 s
 
          *************************************************************
          *                GEOMETRY OPTIMIZATION CYCLE   2            *
@@ -946,7 +945,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Seibert, P. Shushkov, S. Spicher, M. Stahn, M. Steiner, T. Strunk,
    J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2026/09/11 at 15:22:44.826     
+ * started run on 2026/09/11 at 15:52:02.454     
    ID    Z sym.   atoms
     1    6 C      1-5
     2    1 H      6-15
@@ -955,11 +954,10 @@ CARTESIAN COORDINATES (A.U.)
           |                Calculation Setup                |
            -------------------------------------------------
 
-          program call               : /apps/eb/ORCA/6.1.1-gompi-2023b-avx2/bin/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 8 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
-          hostname                   : a1-8
+          program call               : /home/tns97255/orca_6_1_1/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 1 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
           calculation namespace      : goat
           coordinate file            : goat_XTB.xyz
-          omp threads                :                     8
+          omp threads                :                     1
 
 
            -------------------------------------------------
@@ -1021,9 +1019,9 @@ CAMM data taken from xtbrestart
    4    -16.0402349 -0.170846E-03  0.239E-02    5.21       1.1  T
    5    -16.0402395 -0.453393E-05  0.699E-03    5.21       3.7  T
    6    -16.0402395 -0.204288E-07  0.243E-03    5.21      10.6  T
-   7    -16.0402395 -0.696610E-08  0.368E-04    5.21      70.2  T
-   8    -16.0402395 -0.284675E-09  0.169E-04    5.21     153.2  T
-   9    -16.0402395 -0.408775E-10  0.285E-05    5.21     905.4  T
+   7    -16.0402395 -0.696611E-08  0.368E-04    5.21      70.2  T
+   8    -16.0402395 -0.284679E-09  0.169E-04    5.21     153.2  T
+   9    -16.0402395 -0.408562E-10  0.285E-05    5.21     905.4  T
 
    *** convergence criteria satisfied after 9 iterations ***
 
@@ -1049,21 +1047,21 @@ CAMM data taken from xtbrestart
                   HL-Gap            0.1913455 Eh            5.2068 eV
              Fermi-level           -0.2861674 Eh           -7.7870 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.019 sec
- SCC setup                      ...        0 min,  0.000 sec (  0.703%)
- Dispersion                     ...        0 min,  0.000 sec (  0.636%)
- classical contributions        ...        0 min,  0.000 sec (  0.266%)
- integral evaluation            ...        0 min,  0.001 sec (  3.185%)
- iterations                     ...        0 min,  0.016 sec ( 84.738%)
- molecular gradient             ...        0 min,  0.002 sec (  9.315%)
- printout                       ...        0 min,  0.000 sec (  1.058%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.011 sec
+ SCC setup                      ...        0 min,  0.000 sec (  1.017%)
+ Dispersion                     ...        0 min,  0.000 sec (  0.481%)
+ classical contributions        ...        0 min,  0.000 sec (  0.145%)
+ integral evaluation            ...        0 min,  0.001 sec (  5.051%)
+ iterations                     ...        0 min,  0.007 sec ( 65.269%)
+ molecular gradient             ...        0 min,  0.003 sec ( 24.780%)
+ printout                       ...        0 min,  0.000 sec (  2.989%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy             -15.773198832720 Eh    ::
-         :: gradient norm              0.030605364359 Eh/a0 ::
-         :: HOMO-LUMO gap              5.206777164119 eV    ::
+         :: gradient norm              0.030605364360 Eh/a0 ::
+         :: HOMO-LUMO gap              5.206777164118 eV    ::
          ::.................................................::
          :: SCC energy               -16.040233835022 Eh    ::
          :: -> isotropic ES            0.003265940235 Eh    ::
@@ -1072,7 +1070,7 @@ CAMM data taken from xtbrestart
          :: -> dispersion             -0.007280130052 Eh    ::
          :: repulsion energy           0.267035002302 Eh    ::
          :: add. restraining           0.000000000000 Eh    ::
-         :: total charge               0.000000000000 e     ::
+         :: total charge              -0.000000000000 e     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -1080,21 +1078,21 @@ Property printout bound to 'properties.out'
 
            -------------------------------------------------
           | TOTAL ENERGY              -15.773198832720 Eh   |
-          | GRADIENT NORM               0.030605364359 Eh/α |
-          | HOMO-LUMO GAP               5.206777164119 eV   |
+          | GRADIENT NORM               0.030605364360 Eh/α |
+          | HOMO-LUMO GAP               5.206777164118 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2026/09/11 at 15:22:44.865     
+ * finished run on 2026/09/11 at 15:52:02.477     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.039 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.171 sec
- * ratio c/w:     4.442 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.022 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.018 sec
+ * ratio c/w:     0.823 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.019 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.091 sec
- * ratio c/w:     4.732 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.011 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.010 sec
+ * ratio c/w:     0.841 speedup
 
 
 -------------------------   --------------------
@@ -1133,7 +1131,7 @@ CARTESIAN GRADIENT
   15   H   :    0.003689113   -0.001203346   -0.004061335
 
 Difference to translation invariance:
-           :    0.0000000000   -0.0000000000    0.0000000000
+           :    0.0000000000    0.0000000000    0.0000000000
 
 Difference to rotation invariance:
            :   -0.0000000031   -0.0000000056   -0.0000000133
@@ -1263,19 +1261,19 @@ New trust radius                        ....     0.450000000
     ----------------------------------------------------------------------------
 
 Geometry step timings:
-Preparation and reading OPT file:      0.000 s ( 0.853 %)
-Internal coordinates            :      0.000 s ( 1.312 %)
-B/P matrices and projection     :      0.000 s (29.790 %)
-Hessian update/contruction      :      0.000 s (21.588 %)
-Making the step                 :      0.000 s (21.785 %)
-Converting the step to Cartesian:      0.000 s ( 3.281 %)
-Storing new data                :      0.000 s ( 1.312 %)
-Checking convergence            :      0.000 s ( 1.903 %)
-Final printing                  :      0.000 s (18.110 %)
+Preparation and reading OPT file:      0.000 s ( 1.759 %)
+Internal coordinates            :      0.000 s ( 1.449 %)
+B/P matrices and projection     :      0.001 s (31.505 %)
+Hessian update/contruction      :      0.000 s (17.744 %)
+Making the step                 :      0.000 s (21.211 %)
+Converting the step to Cartesian:      0.000 s ( 3.725 %)
+Storing new data                :      0.000 s ( 2.121 %)
+Checking convergence            :      0.000 s ( 1.914 %)
+Final printing                  :      0.000 s (18.469 %)
 Total time                      :      0.002 s
 
-Time for energy+gradient        :      0.047 s
-Time for complete geometry iter :      0.049 s
+Time for energy+gradient        :      0.028 s
+Time for complete geometry iter :      0.031 s
 
          *************************************************************
          *                GEOMETRY OPTIMIZATION CYCLE   3            *
@@ -1413,7 +1411,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Seibert, P. Shushkov, S. Spicher, M. Stahn, M. Steiner, T. Strunk,
    J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2026/09/11 at 15:22:44.876     
+ * started run on 2026/09/11 at 15:52:02.485     
    ID    Z sym.   atoms
     1    6 C      1-5
     2    1 H      6-15
@@ -1422,11 +1420,10 @@ CARTESIAN COORDINATES (A.U.)
           |                Calculation Setup                |
            -------------------------------------------------
 
-          program call               : /apps/eb/ORCA/6.1.1-gompi-2023b-avx2/bin/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 8 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
-          hostname                   : a1-8
+          program call               : /home/tns97255/orca_6_1_1/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 1 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
           calculation namespace      : goat
           coordinate file            : goat_XTB.xyz
-          omp threads                :                     8
+          omp threads                :                     1
 
 
            -------------------------------------------------
@@ -1487,9 +1484,9 @@ CAMM data taken from xtbrestart
    3    -16.0476818  0.411554E-04  0.612E-02    5.25       1.0  T
    4    -16.0477295 -0.476537E-04  0.516E-03    5.25       5.0  T
    5    -16.0477295 -0.667955E-07  0.233E-03    5.25      11.1  T
-   6    -16.0477296 -0.331142E-08  0.412E-04    5.25      62.7  T
+   6    -16.0477296 -0.331141E-08  0.412E-04    5.25      62.7  T
    7    -16.0477296 -0.351520E-09  0.160E-04    5.25     161.7  T
-   8    -16.0477296 -0.286207E-10  0.287E-05    5.25     900.8  T
+   8    -16.0477296 -0.286384E-10  0.287E-05    5.25     900.8  T
 
    *** convergence criteria satisfied after 8 iterations ***
 
@@ -1515,20 +1512,20 @@ CAMM data taken from xtbrestart
                   HL-Gap            0.1928737 Eh            5.2484 eV
              Fermi-level           -0.2859512 Eh           -7.7811 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.019 sec
- SCC setup                      ...        0 min,  0.000 sec (  1.075%)
- Dispersion                     ...        0 min,  0.000 sec (  2.157%)
- classical contributions        ...        0 min,  0.000 sec (  1.098%)
- integral evaluation            ...        0 min,  0.001 sec (  4.165%)
- iterations                     ...        0 min,  0.014 sec ( 70.375%)
- molecular gradient             ...        0 min,  0.004 sec ( 19.798%)
- printout                       ...        0 min,  0.000 sec (  1.247%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.013 sec
+ SCC setup                      ...        0 min,  0.000 sec (  1.366%)
+ Dispersion                     ...        0 min,  0.000 sec (  0.640%)
+ classical contributions        ...        0 min,  0.000 sec (  0.206%)
+ integral evaluation            ...        0 min,  0.001 sec (  7.264%)
+ iterations                     ...        0 min,  0.009 sec ( 68.501%)
+ molecular gradient             ...        0 min,  0.003 sec ( 20.298%)
+ printout                       ...        0 min,  0.000 sec (  1.474%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy             -15.775056558978 Eh    ::
-         :: gradient norm              0.017844034758 Eh/a0 ::
+         :: gradient norm              0.017844034759 Eh/a0 ::
          :: HOMO-LUMO gap              5.248361727063 eV    ::
          ::.................................................::
          :: SCC energy               -16.047724478151 Eh    ::
@@ -1546,21 +1543,21 @@ Property printout bound to 'properties.out'
 
            -------------------------------------------------
           | TOTAL ENERGY              -15.775056558978 Eh   |
-          | GRADIENT NORM               0.017844034758 Eh/α |
+          | GRADIENT NORM               0.017844034759 Eh/α |
           | HOMO-LUMO GAP               5.248361727063 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2026/09/11 at 15:22:44.910     
+ * finished run on 2026/09/11 at 15:52:02.513     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.034 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.131 sec
- * ratio c/w:     3.823 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.027 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.019 sec
+ * ratio c/w:     0.678 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.019 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.077 sec
- * ratio c/w:     3.975 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.013 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.009 sec
+ * ratio c/w:     0.652 speedup
 
 
 -------------------------   --------------------
@@ -1599,7 +1596,7 @@ CARTESIAN GRADIENT
   15   H   :    0.002347910   -0.001812446    0.000944778
 
 Difference to translation invariance:
-           :    0.0000000000    0.0000000000    0.0000000000
+           :    0.0000000000    0.0000000000   -0.0000000000
 
 Difference to rotation invariance:
            :    0.0000000092   -0.0000000096   -0.0000000098
@@ -1655,7 +1652,7 @@ New trust radius                        ....     0.450000000
           RMS gradient        0.0013958752            0.0001000000      NO
           MAX gradient        0.0043837125            0.0003000000      NO
           RMS step            0.0374531995            0.0020000000      NO
-          MAX step            0.1179773522            0.0040000000      NO
+          MAX step            0.1179773521            0.0040000000      NO
           -------------------------------------------------------------------------
           ........................................................
           Max(Bonds)      0.0099      Max(Angles)    1.47
@@ -1729,19 +1726,19 @@ New trust radius                        ....     0.450000000
     ----------------------------------------------------------------------------
 
 Geometry step timings:
-Preparation and reading OPT file:      0.000 s ( 0.997 %)
-Internal coordinates            :      0.000 s ( 1.282 %)
-B/P matrices and projection     :      0.000 s (31.553 %)
-Hessian update/contruction      :      0.000 s (12.821 %)
-Making the step                 :      0.000 s (23.291 %)
-Converting the step to Cartesian:      0.000 s ( 3.561 %)
-Storing new data                :      0.000 s ( 1.425 %)
-Checking convergence            :      0.000 s ( 1.994 %)
-Final printing                  :      0.000 s (23.006 %)
-Total time                      :      0.001 s
+Preparation and reading OPT file:      0.000 s ( 7.399 %)
+Internal coordinates            :      0.000 s ( 1.909 %)
+B/P matrices and projection     :      0.001 s (30.549 %)
+Hessian update/contruction      :      0.000 s (13.007 %)
+Making the step                 :      0.000 s (23.926 %)
+Converting the step to Cartesian:      0.000 s ( 3.222 %)
+Storing new data                :      0.000 s ( 1.850 %)
+Checking convergence            :      0.000 s ( 1.730 %)
+Final printing                  :      0.000 s (16.348 %)
+Total time                      :      0.002 s
 
-Time for energy+gradient        :      0.043 s
-Time for complete geometry iter :      0.045 s
+Time for energy+gradient        :      0.033 s
+Time for complete geometry iter :      0.035 s
 
          *************************************************************
          *                GEOMETRY OPTIMIZATION CYCLE   4            *
@@ -1879,7 +1876,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Seibert, P. Shushkov, S. Spicher, M. Stahn, M. Steiner, T. Strunk,
    J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2026/09/11 at 15:22:44.921     
+ * started run on 2026/09/11 at 15:52:02.521     
    ID    Z sym.   atoms
     1    6 C      1-5
     2    1 H      6-15
@@ -1888,11 +1885,10 @@ CARTESIAN COORDINATES (A.U.)
           |                Calculation Setup                |
            -------------------------------------------------
 
-          program call               : /apps/eb/ORCA/6.1.1-gompi-2023b-avx2/bin/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 8 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
-          hostname                   : a1-8
+          program call               : /home/tns97255/orca_6_1_1/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 1 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
           calculation namespace      : goat
           coordinate file            : goat_XTB.xyz
-          omp threads                :                     8
+          omp threads                :                     1
 
 
            -------------------------------------------------
@@ -1953,9 +1949,9 @@ CAMM data taken from xtbrestart
    3    -16.0475136  0.220239E-04  0.444E-02    5.27       1.0  T
    4    -16.0475386 -0.249464E-04  0.399E-03    5.27       6.5  T
    5    -16.0475387 -0.100940E-06  0.142E-03    5.27      18.1  T
-   6    -16.0475387 -0.144249E-08  0.476E-04    5.27      54.2  T
-   7    -16.0475387 -0.238398E-09  0.109E-04    5.27     236.2  T
-   8    -16.0475387 -0.129319E-10  0.368E-05    5.27     700.8  T
+   6    -16.0475387 -0.144247E-08  0.476E-04    5.27      54.2  T
+   7    -16.0475387 -0.238408E-09  0.109E-04    5.27     236.2  T
+   8    -16.0475387 -0.129177E-10  0.368E-05    5.27     700.8  T
 
    *** convergence criteria satisfied after 8 iterations ***
 
@@ -1981,28 +1977,28 @@ CAMM data taken from xtbrestart
                   HL-Gap            0.1935406 Eh            5.2665 eV
              Fermi-level           -0.2858399 Eh           -7.7781 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.015 sec
- SCC setup                      ...        0 min,  0.000 sec (  1.029%)
- Dispersion                     ...        0 min,  0.000 sec (  1.150%)
- classical contributions        ...        0 min,  0.000 sec (  0.622%)
- integral evaluation            ...        0 min,  0.001 sec (  4.814%)
- iterations                     ...        0 min,  0.012 sec ( 78.078%)
- molecular gradient             ...        0 min,  0.002 sec ( 12.713%)
- printout                       ...        0 min,  0.000 sec (  1.495%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.017 sec
+ SCC setup                      ...        0 min,  0.000 sec (  1.309%)
+ Dispersion                     ...        0 min,  0.000 sec (  0.423%)
+ classical contributions        ...        0 min,  0.000 sec (  0.144%)
+ integral evaluation            ...        0 min,  0.001 sec (  4.827%)
+ iterations                     ...        0 min,  0.006 sec ( 35.929%)
+ molecular gradient             ...        0 min,  0.009 sec ( 55.421%)
+ printout                       ...        0 min,  0.000 sec (  1.732%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy             -15.775865156029 Eh    ::
-         :: gradient norm              0.004915447976 Eh/a0 ::
-         :: HOMO-LUMO gap              5.266507345010 eV    ::
+         :: gradient norm              0.004915447977 Eh/a0 ::
+         :: HOMO-LUMO gap              5.266507345011 eV    ::
          ::.................................................::
-         :: SCC energy               -16.047534024664 Eh    ::
+         :: SCC energy               -16.047534024665 Eh    ::
          :: -> isotropic ES            0.003125308067 Eh    ::
          :: -> anisotropic ES          0.004909151127 Eh    ::
          :: -> anisotropic XC          0.011374496345 Eh    ::
          :: -> dispersion             -0.007244844787 Eh    ::
-         :: repulsion energy           0.271668868635 Eh    ::
+         :: repulsion energy           0.271668868636 Eh    ::
          :: add. restraining           0.000000000000 Eh    ::
          :: total charge               0.000000000000 e     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -2012,21 +2008,21 @@ Property printout bound to 'properties.out'
 
            -------------------------------------------------
           | TOTAL ENERGY              -15.775865156029 Eh   |
-          | GRADIENT NORM               0.004915447976 Eh/α |
-          | HOMO-LUMO GAP               5.266507345010 eV   |
+          | GRADIENT NORM               0.004915447977 Eh/α |
+          | HOMO-LUMO GAP               5.266507345011 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2026/09/11 at 15:22:44.963     
+ * finished run on 2026/09/11 at 15:52:02.549     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.041 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.160 sec
- * ratio c/w:     3.860 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.028 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.025 sec
+ * ratio c/w:     0.895 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.015 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.059 sec
- * ratio c/w:     3.971 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.017 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.015 sec
+ * ratio c/w:     0.890 speedup
 
 
 -------------------------   --------------------
@@ -2065,7 +2061,7 @@ CARTESIAN GRADIENT
   15   H   :    0.000111685   -0.000344333    0.001100953
 
 Difference to translation invariance:
-           :    0.0000000000    0.0000000000    0.0000000000
+           :   -0.0000000000   -0.0000000000    0.0000000000
 
 Difference to rotation invariance:
            :    0.0000000184   -0.0000000084   -0.0000000014
@@ -2195,19 +2191,19 @@ New trust radius                        ....     0.675000000
     ----------------------------------------------------------------------------
 
 Geometry step timings:
-Preparation and reading OPT file:      0.000 s ( 1.469 %)
-Internal coordinates            :      0.000 s ( 1.202 %)
-B/P matrices and projection     :      0.000 s (29.306 %)
-Hessian update/contruction      :      0.000 s (18.425 %)
-Making the step                 :      0.000 s (24.366 %)
-Converting the step to Cartesian:      0.000 s ( 3.204 %)
-Storing new data                :      0.000 s ( 1.402 %)
-Checking convergence            :      0.000 s ( 1.869 %)
-Final printing                  :      0.000 s (18.692 %)
-Total time                      :      0.001 s
+Preparation and reading OPT file:      0.000 s ( 1.465 %)
+Internal coordinates            :      0.000 s ( 1.063 %)
+B/P matrices and projection     :      0.001 s (28.699 %)
+Hessian update/contruction      :      0.001 s (24.102 %)
+Making the step                 :      0.001 s (20.310 %)
+Converting the step to Cartesian:      0.000 s ( 4.367 %)
+Storing new data                :      0.000 s ( 2.729 %)
+Checking convergence            :      0.000 s ( 1.666 %)
+Final printing                  :      0.001 s (15.513 %)
+Total time                      :      0.003 s
 
-Time for energy+gradient        :      0.050 s
-Time for complete geometry iter :      0.052 s
+Time for energy+gradient        :      0.036 s
+Time for complete geometry iter :      0.041 s
 
          *************************************************************
          *                GEOMETRY OPTIMIZATION CYCLE   5            *
@@ -2345,7 +2341,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Seibert, P. Shushkov, S. Spicher, M. Stahn, M. Steiner, T. Strunk,
    J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2026/09/11 at 15:22:44.973     
+ * started run on 2026/09/11 at 15:52:02.563     
    ID    Z sym.   atoms
     1    6 C      1-5
     2    1 H      6-15
@@ -2354,11 +2350,10 @@ CARTESIAN COORDINATES (A.U.)
           |                Calculation Setup                |
            -------------------------------------------------
 
-          program call               : /apps/eb/ORCA/6.1.1-gompi-2023b-avx2/bin/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 8 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
-          hostname                   : a1-8
+          program call               : /home/tns97255/orca_6_1_1/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 1 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
           calculation namespace      : goat
           coordinate file            : goat_XTB.xyz
-          omp threads                :                     8
+          omp threads                :                     1
 
 
            -------------------------------------------------
@@ -2415,13 +2410,13 @@ CAMM data taken from xtbrestart
 
  iter      E             dE          RMSdq      gap      omega  full diag
    1    -16.0465654 -0.160466E+02  0.958E-02    5.27       0.0  T
-   2    -16.0465664 -0.996253E-06  0.571E-02    5.27       1.0  T
+   2    -16.0465664 -0.996254E-06  0.571E-02    5.27       1.0  T
    3    -16.0465642  0.219389E-05  0.138E-02    5.27       1.9  T
    4    -16.0465666 -0.238980E-05  0.291E-03    5.27       8.9  T
    5    -16.0465666 -0.907637E-07  0.807E-04    5.27      32.0  T
-   6    -16.0465666 -0.206544E-09  0.274E-04    5.27      94.3  T
-   7    -16.0465666 -0.506866E-10  0.431E-05    5.27     598.9  T
-   8    -16.0465666 -0.338218E-11  0.172E-05    5.27    1499.5  T
+   6    -16.0465666 -0.206562E-09  0.274E-04    5.27      94.3  T
+   7    -16.0465666 -0.506688E-10  0.431E-05    5.27     598.9  T
+   8    -16.0465666 -0.339639E-11  0.172E-05    5.27    1499.5  T
 
    *** convergence criteria satisfied after 8 iterations ***
 
@@ -2447,21 +2442,21 @@ CAMM data taken from xtbrestart
                   HL-Gap            0.1935432 Eh            5.2666 eV
              Fermi-level           -0.2857848 Eh           -7.7766 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.017 sec
- SCC setup                      ...        0 min,  0.000 sec (  1.035%)
- Dispersion                     ...        0 min,  0.000 sec (  1.665%)
- classical contributions        ...        0 min,  0.000 sec (  0.776%)
- integral evaluation            ...        0 min,  0.001 sec (  5.295%)
- iterations                     ...        0 min,  0.013 sec ( 78.938%)
- molecular gradient             ...        0 min,  0.002 sec ( 10.943%)
- printout                       ...        0 min,  0.000 sec (  1.253%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.018 sec
+ SCC setup                      ...        0 min,  0.000 sec (  1.358%)
+ Dispersion                     ...        0 min,  0.000 sec (  0.679%)
+ classical contributions        ...        0 min,  0.000 sec (  0.164%)
+ integral evaluation            ...        0 min,  0.001 sec (  6.186%)
+ iterations                     ...        0 min,  0.014 sec ( 74.620%)
+ molecular gradient             ...        0 min,  0.003 sec ( 15.781%)
+ printout                       ...        0 min,  0.000 sec (  0.985%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy             -15.776102473223 Eh    ::
-         :: gradient norm              0.004725050811 Eh/a0 ::
-         :: HOMO-LUMO gap              5.266579606583 eV    ::
+         :: gradient norm              0.004725050812 Eh/a0 ::
+         :: HOMO-LUMO gap              5.266579606584 eV    ::
          ::.................................................::
          :: SCC energy               -16.046562119938 Eh    ::
          :: -> isotropic ES            0.003081593234 Eh    ::
@@ -2478,21 +2473,21 @@ Property printout bound to 'properties.out'
 
            -------------------------------------------------
           | TOTAL ENERGY              -15.776102473223 Eh   |
-          | GRADIENT NORM               0.004725050811 Eh/α |
-          | HOMO-LUMO GAP               5.266579606583 eV   |
+          | GRADIENT NORM               0.004725050812 Eh/α |
+          | HOMO-LUMO GAP               5.266579606584 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2026/09/11 at 15:22:45.005     
+ * finished run on 2026/09/11 at 15:52:02.601     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.032 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.145 sec
- * ratio c/w:     4.603 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.038 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.035 sec
+ * ratio c/w:     0.931 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.017 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.081 sec
- * ratio c/w:     4.722 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.018 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.016 sec
+ * ratio c/w:     0.894 speedup
 
 
 -------------------------   --------------------
@@ -2531,7 +2526,7 @@ CARTESIAN GRADIENT
   15   H   :   -0.000551272    0.000433459    0.000518117
 
 Difference to translation invariance:
-           :   -0.0000000000   -0.0000000000   -0.0000000000
+           :   -0.0000000000    0.0000000000    0.0000000000
 
 Difference to rotation invariance:
            :   -0.0000000135   -0.0000000151    0.0000000073
@@ -2576,7 +2571,7 @@ Storing new coordinates                 .... done
 The predicted energy change is          ....    -0.000107240
 Previously predicted energy change      ....    -0.000177432
 Actually observed energy change         ....    -0.000237317
-Ratio of predicted to observed change   ....     1.337509214
+Ratio of predicted to observed change   ....     1.337509213
 New trust radius                        ....     0.675000000
 
                                 .--------------------.
@@ -2661,19 +2656,19 @@ New trust radius                        ....     0.675000000
     ----------------------------------------------------------------------------
 
 Geometry step timings:
-Preparation and reading OPT file:      0.000 s ( 0.991 %)
-Internal coordinates            :      0.000 s ( 1.274 %)
-B/P matrices and projection     :      0.000 s (31.352 %)
-Hessian update/contruction      :      0.000 s (12.810 %)
-Making the step                 :      0.000 s (26.893 %)
-Converting the step to Cartesian:      0.000 s ( 3.397 %)
-Storing new data                :      0.000 s ( 1.415 %)
-Checking convergence            :      0.000 s ( 1.982 %)
-Final printing                  :      0.000 s (19.816 %)
-Total time                      :      0.001 s
+Preparation and reading OPT file:      0.000 s ( 1.266 %)
+Internal coordinates            :      0.000 s ( 1.309 %)
+B/P matrices and projection     :      0.001 s (28.546 %)
+Hessian update/contruction      :      0.000 s (13.138 %)
+Making the step                 :      0.000 s (21.039 %)
+Converting the step to Cartesian:      0.000 s (11.698 %)
+Storing new data                :      0.000 s ( 1.921 %)
+Checking convergence            :      0.000 s ( 1.790 %)
+Final printing                  :      0.000 s (19.249 %)
+Total time                      :      0.002 s
 
-Time for energy+gradient        :      0.040 s
-Time for complete geometry iter :      0.042 s
+Time for energy+gradient        :      0.045 s
+Time for complete geometry iter :      0.048 s
 
          *************************************************************
          *                GEOMETRY OPTIMIZATION CYCLE   6            *
@@ -2811,7 +2806,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Seibert, P. Shushkov, S. Spicher, M. Stahn, M. Steiner, T. Strunk,
    J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2026/09/11 at 15:22:45.015     
+ * started run on 2026/09/11 at 15:52:02.611     
    ID    Z sym.   atoms
     1    6 C      1-5
     2    1 H      6-15
@@ -2820,11 +2815,10 @@ CARTESIAN COORDINATES (A.U.)
           |                Calculation Setup                |
            -------------------------------------------------
 
-          program call               : /apps/eb/ORCA/6.1.1-gompi-2023b-avx2/bin/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 8 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
-          hostname                   : a1-8
+          program call               : /home/tns97255/orca_6_1_1/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 1 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
           calculation namespace      : goat
           coordinate file            : goat_XTB.xyz
-          omp threads                :                     8
+          omp threads                :                     1
 
 
            -------------------------------------------------
@@ -2885,8 +2879,8 @@ CAMM data taken from xtbrestart
    3    -16.0460254 -0.605044E-07  0.217E-03    5.26      11.9  T
    4    -16.0460254 -0.119738E-07  0.129E-03    5.26      20.0  T
    5    -16.0460254 -0.218796E-08  0.818E-04    5.26      31.6  T
-   6    -16.0460254 -0.482339E-08  0.973E-05    5.26     265.3  T
-   7    -16.0460254 -0.129212E-10  0.368E-05    5.26     701.4  T
+   6    -16.0460254 -0.482338E-08  0.973E-05    5.26     265.3  T
+   7    -16.0460254 -0.129354E-10  0.368E-05    5.26     701.4  T
 
    *** convergence criteria satisfied after 7 iterations ***
 
@@ -2912,30 +2906,30 @@ CAMM data taken from xtbrestart
                   HL-Gap            0.1934488 Eh            5.2640 eV
              Fermi-level           -0.2857489 Eh           -7.7756 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.017 sec
- SCC setup                      ...        0 min,  0.000 sec (  0.993%)
- Dispersion                     ...        0 min,  0.000 sec (  1.500%)
- classical contributions        ...        0 min,  0.000 sec (  0.960%)
- integral evaluation            ...        0 min,  0.001 sec (  5.378%)
- iterations                     ...        0 min,  0.013 sec ( 74.080%)
- molecular gradient             ...        0 min,  0.003 sec ( 15.531%)
- printout                       ...        0 min,  0.000 sec (  1.495%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.011 sec
+ SCC setup                      ...        0 min,  0.000 sec (  2.130%)
+ Dispersion                     ...        0 min,  0.000 sec (  0.909%)
+ classical contributions        ...        0 min,  0.000 sec (  0.234%)
+ integral evaluation            ...        0 min,  0.001 sec (  9.805%)
+ iterations                     ...        0 min,  0.008 sec ( 68.294%)
+ molecular gradient             ...        0 min,  0.002 sec ( 17.373%)
+ printout                       ...        0 min,  0.000 sec (  1.035%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy             -15.776243061703 Eh    ::
-         :: gradient norm              0.005139413758 Eh/a0 ::
-         :: HOMO-LUMO gap              5.264010957657 eV    ::
+         :: gradient norm              0.005139413760 Eh/a0 ::
+         :: HOMO-LUMO gap              5.264010957658 eV    ::
          ::.................................................::
          :: SCC energy               -16.046020943086 Eh    ::
          :: -> isotropic ES            0.003072618100 Eh    ::
          :: -> anisotropic ES          0.004956834922 Eh    ::
          :: -> anisotropic XC          0.011412793099 Eh    ::
          :: -> dispersion             -0.007245616521 Eh    ::
-         :: repulsion energy           0.269777881382 Eh    ::
+         :: repulsion energy           0.269777881383 Eh    ::
          :: add. restraining           0.000000000000 Eh    ::
-         :: total charge               0.000000000000 e     ::
+         :: total charge              -0.000000000000 e     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -2943,21 +2937,21 @@ Property printout bound to 'properties.out'
 
            -------------------------------------------------
           | TOTAL ENERGY              -15.776243061703 Eh   |
-          | GRADIENT NORM               0.005139413758 Eh/α |
-          | HOMO-LUMO GAP               5.264010957657 eV   |
+          | GRADIENT NORM               0.005139413760 Eh/α |
+          | HOMO-LUMO GAP               5.264010957658 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2026/09/11 at 15:22:45.048     
+ * finished run on 2026/09/11 at 15:52:02.634     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.033 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.117 sec
- * ratio c/w:     3.565 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.022 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.019 sec
+ * ratio c/w:     0.846 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.018 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.061 sec
- * ratio c/w:     3.501 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.011 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.009 sec
+ * ratio c/w:     0.786 speedup
 
 
 -------------------------   --------------------
@@ -2996,7 +2990,7 @@ CARTESIAN GRADIENT
   15   H   :   -0.000501574    0.000692054   -0.000022335
 
 Difference to translation invariance:
-           :    0.0000000000   -0.0000000000   -0.0000000000
+           :    0.0000000000   -0.0000000000    0.0000000000
 
 Difference to rotation invariance:
            :   -0.0000000400   -0.0000000170   -0.0000000029
@@ -3040,7 +3034,7 @@ Storing new coordinates                 .... done
 The predicted energy change is          ....    -0.000050133
 Previously predicted energy change      ....    -0.000107240
 Actually observed energy change         ....    -0.000140588
-Ratio of predicted to observed change   ....     1.310972672
+Ratio of predicted to observed change   ....     1.310972671
 New trust radius                        ....     0.675000000
 
                                 .--------------------.
@@ -3125,19 +3119,19 @@ New trust radius                        ....     0.675000000
     ----------------------------------------------------------------------------
 
 Geometry step timings:
-Preparation and reading OPT file:      0.000 s ( 1.314 %)
-Internal coordinates            :      0.000 s ( 1.241 %)
-B/P matrices and projection     :      0.000 s (32.701 %)
-Hessian update/contruction      :      0.000 s (13.431 %)
-Making the step                 :      0.000 s (24.161 %)
-Converting the step to Cartesian:      0.000 s ( 2.993 %)
-Storing new data                :      0.000 s ( 1.460 %)
-Checking convergence            :      0.000 s ( 2.044 %)
-Final printing                  :      0.000 s (20.657 %)
-Total time                      :      0.001 s
+Preparation and reading OPT file:      0.000 s ( 1.359 %)
+Internal coordinates            :      0.000 s ( 1.116 %)
+B/P matrices and projection     :      0.001 s (44.736 %)
+Hessian update/contruction      :      0.000 s (13.974 %)
+Making the step                 :      0.000 s (17.516 %)
+Converting the step to Cartesian:      0.000 s ( 2.377 %)
+Storing new data                :      0.000 s ( 1.407 %)
+Checking convergence            :      0.000 s ( 1.504 %)
+Final printing                  :      0.000 s (15.963 %)
+Total time                      :      0.002 s
 
-Time for energy+gradient        :      0.042 s
-Time for complete geometry iter :      0.044 s
+Time for energy+gradient        :      0.029 s
+Time for complete geometry iter :      0.032 s
 
          *************************************************************
          *                GEOMETRY OPTIMIZATION CYCLE   7            *
@@ -3275,7 +3269,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Seibert, P. Shushkov, S. Spicher, M. Stahn, M. Steiner, T. Strunk,
    J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2026/09/11 at 15:22:45.058     
+ * started run on 2026/09/11 at 15:52:02.642     
    ID    Z sym.   atoms
     1    6 C      1-5
     2    1 H      6-15
@@ -3284,11 +3278,10 @@ CARTESIAN COORDINATES (A.U.)
           |                Calculation Setup                |
            -------------------------------------------------
 
-          program call               : /apps/eb/ORCA/6.1.1-gompi-2023b-avx2/bin/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 8 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
-          hostname                   : a1-8
+          program call               : /home/tns97255/orca_6_1_1/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 1 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
           calculation namespace      : goat
           coordinate file            : goat_XTB.xyz
-          omp threads                :                     8
+          omp threads                :                     1
 
 
            -------------------------------------------------
@@ -3348,9 +3341,9 @@ CAMM data taken from xtbrestart
    2    -16.0462109 -0.160155E-06  0.367E-02    5.26       1.0  T
    3    -16.0462102  0.672018E-06  0.756E-03    5.26       3.4  T
    4    -16.0462110 -0.767207E-06  0.120E-03    5.26      21.5  T
-   5    -16.0462110 -0.459897E-08  0.434E-04    5.26      59.4  T
+   5    -16.0462110 -0.459895E-08  0.434E-04    5.26      59.4  T
    6    -16.0462110 -0.117936E-09  0.102E-04    5.26     253.3  T
-   7    -16.0462110 -0.188365E-10  0.348E-05    5.26     741.7  T
+   7    -16.0462110 -0.188685E-10  0.348E-05    5.26     741.7  T
 
    *** convergence criteria satisfied after 7 iterations ***
 
@@ -3376,21 +3369,21 @@ CAMM data taken from xtbrestart
                   HL-Gap            0.1934246 Eh            5.2634 eV
              Fermi-level           -0.2857291 Eh           -7.7751 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.018 sec
- SCC setup                      ...        0 min,  0.008 sec ( 45.496%)
- Dispersion                     ...        0 min,  0.000 sec (  0.943%)
- classical contributions        ...        0 min,  0.000 sec (  0.488%)
- integral evaluation            ...        0 min,  0.001 sec (  3.186%)
- iterations                     ...        0 min,  0.007 sec ( 41.271%)
- molecular gradient             ...        0 min,  0.001 sec (  7.662%)
- printout                       ...        0 min,  0.000 sec (  0.869%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.007 sec
+ SCC setup                      ...        0 min,  0.000 sec (  1.890%)
+ Dispersion                     ...        0 min,  0.000 sec (  0.986%)
+ classical contributions        ...        0 min,  0.000 sec (  0.235%)
+ integral evaluation            ...        0 min,  0.001 sec (  8.392%)
+ iterations                     ...        0 min,  0.004 sec ( 59.856%)
+ molecular gradient             ...        0 min,  0.002 sec ( 26.888%)
+ printout                       ...        0 min,  0.000 sec (  1.466%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy             -15.776307175488 Eh    ::
-         :: gradient norm              0.002611723875 Eh/a0 ::
-         :: HOMO-LUMO gap              5.263351911469 eV    ::
+         :: gradient norm              0.002611723876 Eh/a0 ::
+         :: HOMO-LUMO gap              5.263351911470 eV    ::
          ::.................................................::
          :: SCC energy               -16.046206569813 Eh    ::
          :: -> isotropic ES            0.003089810688 Eh    ::
@@ -3407,21 +3400,21 @@ Property printout bound to 'properties.out'
 
            -------------------------------------------------
           | TOTAL ENERGY              -15.776307175488 Eh   |
-          | GRADIENT NORM               0.002611723875 Eh/α |
-          | HOMO-LUMO GAP               5.263351911469 eV   |
+          | GRADIENT NORM               0.002611723876 Eh/α |
+          | HOMO-LUMO GAP               5.263351911470 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2026/09/11 at 15:22:45.119     
+ * finished run on 2026/09/11 at 15:52:02.662     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.060 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.241 sec
- * ratio c/w:     3.990 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.019 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.014 sec
+ * ratio c/w:     0.711 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.018 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.077 sec
- * ratio c/w:     4.236 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.007 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.006 sec
+ * ratio c/w:     0.811 speedup
 
 
 -------------------------   --------------------
@@ -3460,7 +3453,7 @@ CARTESIAN GRADIENT
   15   H   :   -0.000149780    0.000380087   -0.000178059
 
 Difference to translation invariance:
-           :   -0.0000000000    0.0000000000    0.0000000000
+           :    0.0000000000    0.0000000000   -0.0000000000
 
 Difference to rotation invariance:
            :   -0.0000000304   -0.0000000070   -0.0000000046
@@ -3496,7 +3489,7 @@ Lowest eigenvalues of augmented Hessian:
 Length of the computed step             ....  0.064054790
 The final length of the internal step   ....  0.064054790
 Converting the step to Cartesian space:
- Initial RMS(Int)=    0.0084108059
+ Initial RMS(Int)=    0.0084108060
 Transforming coordinates:
  Iter   0:  RMS(Cart)=    0.0141314374 RMS(Int)=    0.0084065109
 done
@@ -3504,7 +3497,7 @@ Storing new coordinates                 .... done
 The predicted energy change is          ....    -0.000015545
 Previously predicted energy change      ....    -0.000050133
 Actually observed energy change         ....    -0.000064114
-Ratio of predicted to observed change   ....     1.278874466
+Ratio of predicted to observed change   ....     1.278874465
 New trust radius                        ....     0.675000000
 
                                 .--------------------.
@@ -3514,7 +3507,7 @@ New trust radius                        ....     0.675000000
           Energy change      -0.0000641138            0.0000050000      NO
           RMS gradient        0.0002264317            0.0001000000      NO
           MAX gradient        0.0007779554            0.0003000000      NO
-          RMS step            0.0084108059            0.0020000000      NO
+          RMS step            0.0084108060            0.0020000000      NO
           MAX step            0.0314509311            0.0040000000      NO
           -------------------------------------------------------------------------
           ........................................................
@@ -3589,19 +3582,19 @@ New trust radius                        ....     0.675000000
     ----------------------------------------------------------------------------
 
 Geometry step timings:
-Preparation and reading OPT file:      0.000 s ( 0.922 %)
-Internal coordinates            :      0.000 s ( 1.252 %)
-B/P matrices and projection     :      0.000 s (29.578 %)
-Hessian update/contruction      :      0.000 s (18.182 %)
-Making the step                 :      0.000 s (22.464 %)
-Converting the step to Cartesian:      0.000 s ( 5.995 %)
-Storing new data                :      0.000 s ( 1.318 %)
-Checking convergence            :      0.000 s ( 1.845 %)
-Final printing                  :      0.000 s (18.445 %)
+Preparation and reading OPT file:      0.000 s ( 1.656 %)
+Internal coordinates            :      0.000 s ( 1.457 %)
+B/P matrices and projection     :      0.001 s (38.146 %)
+Hessian update/contruction      :      0.000 s (14.040 %)
+Making the step                 :      0.000 s (22.914 %)
+Converting the step to Cartesian:      0.000 s ( 2.649 %)
+Storing new data                :      0.000 s ( 1.523 %)
+Checking convergence            :      0.000 s ( 1.921 %)
+Final printing                  :      0.000 s (15.629 %)
 Total time                      :      0.002 s
 
-Time for energy+gradient        :      0.069 s
-Time for complete geometry iter :      0.071 s
+Time for energy+gradient        :      0.026 s
+Time for complete geometry iter :      0.028 s
 
          *************************************************************
          *                GEOMETRY OPTIMIZATION CYCLE   8            *
@@ -3739,7 +3732,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Seibert, P. Shushkov, S. Spicher, M. Stahn, M. Steiner, T. Strunk,
    J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2026/09/11 at 15:22:45.130     
+ * started run on 2026/09/11 at 15:52:02.670     
    ID    Z sym.   atoms
     1    6 C      1-5
     2    1 H      6-15
@@ -3748,11 +3741,10 @@ CARTESIAN COORDINATES (A.U.)
           |                Calculation Setup                |
            -------------------------------------------------
 
-          program call               : /apps/eb/ORCA/6.1.1-gompi-2023b-avx2/bin/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 8 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
-          hostname                   : a1-8
+          program call               : /home/tns97255/orca_6_1_1/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 1 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
           calculation namespace      : goat
           coordinate file            : goat_XTB.xyz
-          omp threads                :                     8
+          omp threads                :                     1
 
 
            -------------------------------------------------
@@ -3812,9 +3804,9 @@ CAMM data taken from xtbrestart
    2    -16.0466343 -0.111644E-06  0.172E-02    5.26       1.5  T
    3    -16.0466341  0.218217E-06  0.442E-03    5.26       5.8  T
    4    -16.0466343 -0.239920E-06  0.996E-04    5.26      25.9  T
-   5    -16.0466343 -0.983533E-08  0.271E-04    5.26      95.3  T
+   5    -16.0466343 -0.983531E-08  0.271E-04    5.26      95.3  T
    6    -16.0466343 -0.537739E-10  0.904E-05    5.26     285.6  T
-   7    -16.0466343 -0.710898E-11  0.202E-05    5.26    1277.1  T
+   7    -16.0466343 -0.711253E-11  0.202E-05    5.26    1277.1  T
 
    *** convergence criteria satisfied after 7 iterations ***
 
@@ -3840,20 +3832,20 @@ CAMM data taken from xtbrestart
                   HL-Gap            0.1934798 Eh            5.2649 eV
              Fermi-level           -0.2857224 Eh           -7.7749 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.010 sec
- SCC setup                      ...        0 min,  0.000 sec (  1.996%)
- Dispersion                     ...        0 min,  0.000 sec (  1.742%)
- classical contributions        ...        0 min,  0.000 sec (  1.279%)
- integral evaluation            ...        0 min,  0.000 sec (  4.380%)
- iterations                     ...        0 min,  0.007 sec ( 75.128%)
- molecular gradient             ...        0 min,  0.001 sec ( 13.090%)
- printout                       ...        0 min,  0.000 sec (  2.138%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.007 sec
+ SCC setup                      ...        0 min,  0.000 sec (  3.305%)
+ Dispersion                     ...        0 min,  0.000 sec (  0.830%)
+ classical contributions        ...        0 min,  0.000 sec (  0.264%)
+ integral evaluation            ...        0 min,  0.001 sec (  9.371%)
+ iterations                     ...        0 min,  0.004 sec ( 58.003%)
+ molecular gradient             ...        0 min,  0.002 sec ( 26.175%)
+ printout                       ...        0 min,  0.000 sec (  1.835%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy             -15.776327775206 Eh    ::
-         :: gradient norm              0.000772455628 Eh/a0 ::
+         :: gradient norm              0.000772455627 Eh/a0 ::
          :: HOMO-LUMO gap              5.264852076168 eV    ::
          ::.................................................::
          :: SCC energy               -16.046629904327 Eh    ::
@@ -3861,7 +3853,7 @@ CAMM data taken from xtbrestart
          :: -> anisotropic ES          0.004945939920 Eh    ::
          :: -> anisotropic XC          0.011423239885 Eh    ::
          :: -> dispersion             -0.007244419607 Eh    ::
-         :: repulsion energy           0.270302129120 Eh    ::
+         :: repulsion energy           0.270302129121 Eh    ::
          :: add. restraining           0.000000000000 Eh    ::
          :: total charge              -0.000000000000 e     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -3871,21 +3863,21 @@ Property printout bound to 'properties.out'
 
            -------------------------------------------------
           | TOTAL ENERGY              -15.776327775206 Eh   |
-          | GRADIENT NORM               0.000772455628 Eh/α |
+          | GRADIENT NORM               0.000772455627 Eh/α |
           | HOMO-LUMO GAP               5.264852076168 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2026/09/11 at 15:22:45.156     
+ * finished run on 2026/09/11 at 15:52:02.686     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.025 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.121 sec
- * ratio c/w:     4.740 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.015 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.014 sec
+ * ratio c/w:     0.880 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.010 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.050 sec
- * ratio c/w:     5.083 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.007 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.006 sec
+ * ratio c/w:     0.801 speedup
 
 
 -------------------------   --------------------
@@ -3924,7 +3916,7 @@ CARTESIAN GRADIENT
   15   H   :    0.000046490    0.000002891   -0.000081726
 
 Difference to translation invariance:
-           :    0.0000000000    0.0000000000   -0.0000000000
+           :   -0.0000000000    0.0000000000    0.0000000000
 
 Difference to rotation invariance:
            :   -0.0000000040   -0.0000000037   -0.0000000022
@@ -3956,7 +3948,7 @@ Forming the augmented Hessian           .... done
 Diagonalizing the augmented Hessian     .... done
 Last element of RFO vector              ....  0.998785390
 Lowest eigenvalues of augmented Hessian:
- -0.000013180  0.002380801  0.006644961  0.013761911  0.027183364
+ -0.000013180  0.002380801  0.006644961  0.013761911  0.027183365
 Length of the computed step             ....  0.049332071
 The final length of the internal step   ....  0.049332071
 Converting the step to Cartesian space:
@@ -3968,7 +3960,7 @@ Storing new coordinates                 .... done
 The predicted energy change is          ....    -0.000006606
 Previously predicted energy change      ....    -0.000015545
 Actually observed energy change         ....    -0.000020600
-Ratio of predicted to observed change   ....     1.325144050
+Ratio of predicted to observed change   ....     1.325144049
 New trust radius                        ....     0.675000000
 
                                 .--------------------.
@@ -3979,7 +3971,7 @@ New trust radius                        ....     0.675000000
           RMS gradient        0.0000837171            0.0001000000      YES
           MAX gradient        0.0002491249            0.0003000000      YES
           RMS step            0.0064776183            0.0020000000      NO
-          MAX step            0.0216225318            0.0040000000      NO
+          MAX step            0.0216225319            0.0040000000      NO
           -------------------------------------------------------------------------
           ........................................................
           Max(Bonds)      0.0007      Max(Angles)    0.09
@@ -4053,19 +4045,19 @@ New trust radius                        ....     0.675000000
     ----------------------------------------------------------------------------
 
 Geometry step timings:
-Preparation and reading OPT file:      0.000 s ( 1.135 %)
-Internal coordinates            :      0.000 s ( 1.535 %)
-B/P matrices and projection     :      0.001 s (35.113 %)
-Hessian update/contruction      :      0.000 s (13.752 %)
-Making the step                 :      0.000 s (23.364 %)
-Converting the step to Cartesian:      0.000 s ( 2.537 %)
-Storing new data                :      0.000 s ( 1.402 %)
-Checking convergence            :      0.000 s ( 2.470 %)
-Final printing                  :      0.000 s (18.692 %)
-Total time                      :      0.001 s
+Preparation and reading OPT file:      0.000 s ( 1.746 %)
+Internal coordinates            :      0.000 s ( 1.484 %)
+B/P matrices and projection     :      0.001 s (35.705 %)
+Hessian update/contruction      :      0.000 s (14.404 %)
+Making the step                 :      0.000 s (17.722 %)
+Converting the step to Cartesian:      0.000 s ( 2.226 %)
+Storing new data                :      0.000 s ( 1.440 %)
+Checking convergence            :      0.000 s ( 7.944 %)
+Final printing                  :      0.000 s (17.329 %)
+Total time                      :      0.002 s
 
-Time for energy+gradient        :      0.036 s
-Time for complete geometry iter :      0.038 s
+Time for energy+gradient        :      0.021 s
+Time for complete geometry iter :      0.024 s
 
          *************************************************************
          *                GEOMETRY OPTIMIZATION CYCLE   9            *
@@ -4203,7 +4195,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Seibert, P. Shushkov, S. Spicher, M. Stahn, M. Steiner, T. Strunk,
    J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2026/09/11 at 15:22:45.168     
+ * started run on 2026/09/11 at 15:52:02.695     
    ID    Z sym.   atoms
     1    6 C      1-5
     2    1 H      6-15
@@ -4212,11 +4204,10 @@ CARTESIAN COORDINATES (A.U.)
           |                Calculation Setup                |
            -------------------------------------------------
 
-          program call               : /apps/eb/ORCA/6.1.1-gompi-2023b-avx2/bin/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 8 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
-          hostname                   : a1-8
+          program call               : /home/tns97255/orca_6_1_1/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 1 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
           calculation namespace      : goat
           coordinate file            : goat_XTB.xyz
-          omp threads                :                     8
+          omp threads                :                     1
 
 
            -------------------------------------------------
@@ -4273,11 +4264,11 @@ CAMM data taken from xtbrestart
 
  iter      E             dE          RMSdq      gap      omega  full diag
    1    -16.0468900 -0.160469E+02  0.200E-02    5.27       0.0  T
-   2    -16.0468901 -0.297617E-07  0.120E-02    5.27       2.2  T
+   2    -16.0468901 -0.297616E-07  0.120E-02    5.27       2.2  T
    3    -16.0468901  0.150695E-07  0.133E-03    5.27      19.4  T
    4    -16.0468901 -0.175774E-07  0.590E-04    5.27      43.7  T
-   5    -16.0468901 -0.369824E-08  0.170E-04    5.27     152.3  T
-   6    -16.0468901 -0.264109E-10  0.453E-05    5.27     570.1  T
+   5    -16.0468901 -0.369822E-08  0.170E-04    5.27     152.3  T
+   6    -16.0468901 -0.264144E-10  0.453E-05    5.27     570.1  T
 
    *** convergence criteria satisfied after 6 iterations ***
 
@@ -4304,29 +4295,29 @@ CAMM data taken from xtbrestart
              Fermi-level           -0.2857203 Eh           -7.7748 eV
 
  SCC (total)                   0 d,  0 h,  0 min,  0.008 sec
- SCC setup                      ...        0 min,  0.000 sec (  1.925%)
- Dispersion                     ...        0 min,  0.000 sec (  0.749%)
- classical contributions        ...        0 min,  0.000 sec (  0.250%)
- integral evaluation            ...        0 min,  0.000 sec (  3.664%)
- iterations                     ...        0 min,  0.007 sec ( 77.877%)
- molecular gradient             ...        0 min,  0.001 sec ( 13.512%)
- printout                       ...        0 min,  0.000 sec (  1.727%)
+ SCC setup                      ...        0 min,  0.000 sec (  1.853%)
+ Dispersion                     ...        0 min,  0.000 sec (  0.800%)
+ classical contributions        ...        0 min,  0.000 sec (  0.248%)
+ integral evaluation            ...        0 min,  0.001 sec (  9.125%)
+ iterations                     ...        0 min,  0.004 sec ( 58.437%)
+ molecular gradient             ...        0 min,  0.002 sec ( 27.517%)
+ printout                       ...        0 min,  0.000 sec (  1.737%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy             -15.776337074088 Eh    ::
-         :: gradient norm              0.001108813259 Eh/a0 ::
+         :: gradient norm              0.001108813258 Eh/a0 ::
          :: HOMO-LUMO gap              5.266446673406 eV    ::
          ::.................................................::
-         :: SCC energy               -16.046885702328 Eh    ::
+         :: SCC energy               -16.046885702327 Eh    ::
          :: -> isotropic ES            0.003113252118 Eh    ::
          :: -> anisotropic ES          0.004939504883 Eh    ::
          :: -> anisotropic XC          0.011417381278 Eh    ::
          :: -> dispersion             -0.007243252569 Eh    ::
          :: repulsion energy           0.270548628239 Eh    ::
          :: add. restraining           0.000000000000 Eh    ::
-         :: total charge              -0.000000000000 e     ::
+         :: total charge               0.000000000000 e     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -4334,21 +4325,21 @@ Property printout bound to 'properties.out'
 
            -------------------------------------------------
           | TOTAL ENERGY              -15.776337074088 Eh   |
-          | GRADIENT NORM               0.001108813259 Eh/α |
+          | GRADIENT NORM               0.001108813258 Eh/α |
           | HOMO-LUMO GAP               5.266446673406 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2026/09/11 at 15:22:45.192     
+ * finished run on 2026/09/11 at 15:52:02.711     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.023 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.151 sec
- * ratio c/w:     6.500 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.015 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.013 sec
+ * ratio c/w:     0.867 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.009 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.060 sec
- * ratio c/w:     7.061 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.008 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.006 sec
+ * ratio c/w:     0.798 speedup
 
 
 -------------------------   --------------------
@@ -4387,7 +4378,7 @@ CARTESIAN GRADIENT
   15   H   :    0.000089093   -0.000182044    0.000003235
 
 Difference to translation invariance:
-           :   -0.0000000000   -0.0000000000   -0.0000000000
+           :    0.0000000000   -0.0000000000   -0.0000000000
 
 Difference to rotation invariance:
            :    0.0000000180   -0.0000000221   -0.0000000058
@@ -4431,7 +4422,7 @@ Storing new coordinates                 .... done
 The predicted energy change is          ....    -0.000004193
 Previously predicted energy change      ....    -0.000006606
 Actually observed energy change         ....    -0.000009299
-Ratio of predicted to observed change   ....     1.407632415
+Ratio of predicted to observed change   ....     1.407632414
 New trust radius                        ....     0.675000000
 
                                 .--------------------.
@@ -4516,19 +4507,19 @@ New trust radius                        ....     0.675000000
     ----------------------------------------------------------------------------
 
 Geometry step timings:
-Preparation and reading OPT file:      0.000 s ( 1.065 %)
-Internal coordinates            :      0.000 s ( 1.465 %)
-B/P matrices and projection     :      0.001 s (34.887 %)
-Hessian update/contruction      :      0.000 s (13.582 %)
-Making the step                 :      0.000 s (24.368 %)
-Converting the step to Cartesian:      0.000 s ( 2.796 %)
-Storing new data                :      0.000 s ( 1.332 %)
-Checking convergence            :      0.000 s ( 1.997 %)
-Final printing                  :      0.000 s (18.509 %)
+Preparation and reading OPT file:      0.000 s ( 1.464 %)
+Internal coordinates            :      0.000 s ( 1.151 %)
+B/P matrices and projection     :      0.001 s (36.088 %)
+Hessian update/contruction      :      0.000 s (15.272 %)
+Making the step                 :      0.000 s (24.738 %)
+Converting the step to Cartesian:      0.000 s ( 2.615 %)
+Storing new data                :      0.000 s ( 1.831 %)
+Checking convergence            :      0.000 s ( 2.092 %)
+Final printing                  :      0.000 s (14.697 %)
 Total time                      :      0.002 s
 
-Time for energy+gradient        :      0.034 s
-Time for complete geometry iter :      0.036 s
+Time for energy+gradient        :      0.023 s
+Time for complete geometry iter :      0.025 s
 
          *************************************************************
          *                GEOMETRY OPTIMIZATION CYCLE  10            *
@@ -4666,7 +4657,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Seibert, P. Shushkov, S. Spicher, M. Stahn, M. Steiner, T. Strunk,
    J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2026/09/11 at 15:22:45.205     
+ * started run on 2026/09/11 at 15:52:02.719     
    ID    Z sym.   atoms
     1    6 C      1-5
     2    1 H      6-15
@@ -4675,11 +4666,10 @@ CARTESIAN COORDINATES (A.U.)
           |                Calculation Setup                |
            -------------------------------------------------
 
-          program call               : /apps/eb/ORCA/6.1.1-gompi-2023b-avx2/bin/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 8 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
-          hostname                   : a1-8
+          program call               : /home/tns97255/orca_6_1_1/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 1 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
           calculation namespace      : goat
           coordinate file            : goat_XTB.xyz
-          omp threads                :                     8
+          omp threads                :                     1
 
 
            -------------------------------------------------
@@ -4736,11 +4726,11 @@ CAMM data taken from xtbrestart
 
  iter      E             dE          RMSdq      gap      omega  full diag
    1    -16.0469337 -0.160469E+02  0.189E-02    5.27       0.0  T
-   2    -16.0469337 -0.843268E-08  0.114E-02    5.27       2.3  T
-   3    -16.0469337 -0.108950E-08  0.581E-04    5.27      44.4  T
-   4    -16.0469337 -0.240304E-08  0.298E-04    5.27      86.6  T
-   5    -16.0469337 -0.416307E-09  0.801E-05    5.27     322.5  T
-   6    -16.0469337 -0.281730E-10  0.225E-05    5.27    1148.8  T
+   2    -16.0469337 -0.843271E-08  0.114E-02    5.27       2.3  T
+   3    -16.0469337 -0.108948E-08  0.581E-04    5.27      44.4  T
+   4    -16.0469337 -0.240303E-08  0.298E-04    5.27      86.6  T
+   5    -16.0469337 -0.416328E-09  0.801E-05    5.27     322.5  T
+   6    -16.0469337 -0.281553E-10  0.225E-05    5.27    1148.8  T
 
    *** convergence criteria satisfied after 6 iterations ***
 
@@ -4766,21 +4756,21 @@ CAMM data taken from xtbrestart
                   HL-Gap            0.1935708 Eh            5.2673 eV
              Fermi-level           -0.2857193 Eh           -7.7748 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.013 sec
- SCC setup                      ...        0 min,  0.000 sec (  1.573%)
- Dispersion                     ...        0 min,  0.000 sec (  2.212%)
- classical contributions        ...        0 min,  0.000 sec (  1.060%)
- integral evaluation            ...        0 min,  0.001 sec (  6.434%)
- iterations                     ...        0 min,  0.008 sec ( 65.083%)
- molecular gradient             ...        0 min,  0.003 sec ( 21.816%)
- printout                       ...        0 min,  0.000 sec (  1.705%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.009 sec
+ SCC setup                      ...        0 min,  0.000 sec (  1.464%)
+ Dispersion                     ...        0 min,  0.000 sec (  0.662%)
+ classical contributions        ...        0 min,  0.000 sec (  0.201%)
+ integral evaluation            ...        0 min,  0.001 sec (  7.680%)
+ iterations                     ...        0 min,  0.006 sec ( 62.949%)
+ molecular gradient             ...        0 min,  0.002 sec ( 23.855%)
+ printout                       ...        0 min,  0.000 sec (  2.869%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy             -15.776342507784 Eh    ::
-         :: gradient norm              0.000986996255 Eh/a0 ::
-         :: HOMO-LUMO gap              5.267329997880 eV    ::
+         :: gradient norm              0.000986996256 Eh/a0 ::
+         :: HOMO-LUMO gap              5.267329997879 eV    ::
          ::.................................................::
          :: SCC energy               -16.046929380704 Eh    ::
          :: -> isotropic ES            0.003112866858 Eh    ::
@@ -4789,7 +4779,7 @@ CAMM data taken from xtbrestart
          :: -> dispersion             -0.007242445652 Eh    ::
          :: repulsion energy           0.270586872920 Eh    ::
          :: add. restraining           0.000000000000 Eh    ::
-         :: total charge              -0.000000000000 e     ::
+         :: total charge               0.000000000000 e     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -4797,21 +4787,21 @@ Property printout bound to 'properties.out'
 
            -------------------------------------------------
           | TOTAL ENERGY              -15.776342507784 Eh   |
-          | GRADIENT NORM               0.000986996255 Eh/α |
-          | HOMO-LUMO GAP               5.267329997880 eV   |
+          | GRADIENT NORM               0.000986996256 Eh/α |
+          | HOMO-LUMO GAP               5.267329997879 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2026/09/11 at 15:22:45.245     
+ * finished run on 2026/09/11 at 15:52:02.738     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.040 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.152 sec
- * ratio c/w:     3.844 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.018 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.015 sec
+ * ratio c/w:     0.840 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.013 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.051 sec
- * ratio c/w:     3.971 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.009 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.007 sec
+ * ratio c/w:     0.761 speedup
 
 
 -------------------------   --------------------
@@ -4894,7 +4884,7 @@ Storing new coordinates                 .... done
 The predicted energy change is          ....    -0.000001196
 Previously predicted energy change      ....    -0.000004193
 Actually observed energy change         ....    -0.000005434
-Ratio of predicted to observed change   ....     1.295870344
+Ratio of predicted to observed change   ....     1.295870343
 New trust radius                        ....     0.675000000
 
                                 .--------------------.
@@ -4979,19 +4969,19 @@ New trust radius                        ....     0.675000000
     ----------------------------------------------------------------------------
 
 Geometry step timings:
-Preparation and reading OPT file:      0.000 s ( 1.018 %)
-Internal coordinates            :      0.000 s ( 1.153 %)
-B/P matrices and projection     :      0.000 s (30.733 %)
-Hessian update/contruction      :      0.000 s (19.335 %)
-Making the step                 :      0.000 s (23.202 %)
-Converting the step to Cartesian:      0.000 s ( 2.442 %)
-Storing new data                :      0.000 s ( 1.493 %)
-Checking convergence            :      0.000 s ( 1.900 %)
-Final printing                  :      0.000 s (18.657 %)
-Total time                      :      0.001 s
+Preparation and reading OPT file:      0.000 s ( 1.525 %)
+Internal coordinates            :      0.000 s ( 1.382 %)
+B/P matrices and projection     :      0.001 s (36.892 %)
+Hessian update/contruction      :      0.000 s (13.346 %)
+Making the step                 :      0.000 s (23.022 %)
+Converting the step to Cartesian:      0.000 s ( 2.479 %)
+Storing new data                :      0.000 s ( 2.050 %)
+Checking convergence            :      0.000 s ( 2.383 %)
+Final printing                  :      0.000 s (16.921 %)
+Total time                      :      0.002 s
 
-Time for energy+gradient        :      0.050 s
-Time for complete geometry iter :      0.052 s
+Time for energy+gradient        :      0.024 s
+Time for complete geometry iter :      0.027 s
 
          *************************************************************
          *                GEOMETRY OPTIMIZATION CYCLE  11            *
@@ -5129,7 +5119,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Seibert, P. Shushkov, S. Spicher, M. Stahn, M. Steiner, T. Strunk,
    J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2026/09/11 at 15:22:45.255     
+ * started run on 2026/09/11 at 15:52:02.747     
    ID    Z sym.   atoms
     1    6 C      1-5
     2    1 H      6-15
@@ -5138,11 +5128,10 @@ CARTESIAN COORDINATES (A.U.)
           |                Calculation Setup                |
            -------------------------------------------------
 
-          program call               : /apps/eb/ORCA/6.1.1-gompi-2023b-avx2/bin/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 8 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
-          hostname                   : a1-8
+          program call               : /home/tns97255/orca_6_1_1/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 1 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
           calculation namespace      : goat
           coordinate file            : goat_XTB.xyz
-          omp threads                :                     8
+          omp threads                :                     1
 
 
            -------------------------------------------------
@@ -5199,11 +5188,11 @@ CAMM data taken from xtbrestart
 
  iter      E             dE          RMSdq      gap      omega  full diag
    1    -16.0468264 -0.160468E+02  0.855E-03    5.27       0.0  T
-   2    -16.0468264 -0.809084E-08  0.514E-03    5.27       5.0  T
-   3    -16.0468264  0.602357E-08  0.778E-04    5.27      33.2  T
-   4    -16.0468264 -0.638050E-08  0.297E-04    5.27      87.0  T
-   5    -16.0468264 -0.103411E-08  0.737E-05    5.27     350.2  T
-   6    -16.0468264 -0.617817E-11  0.270E-05    5.27     957.0  T
+   2    -16.0468264 -0.809082E-08  0.514E-03    5.27       5.0  T
+   3    -16.0468264  0.602358E-08  0.778E-04    5.27      33.2  T
+   4    -16.0468264 -0.638052E-08  0.297E-04    5.27      87.0  T
+   5    -16.0468264 -0.103409E-08  0.737E-05    5.27     350.2  T
+   6    -16.0468264 -0.617106E-11  0.270E-05    5.27     957.0  T
 
    *** convergence criteria satisfied after 6 iterations ***
 
@@ -5229,21 +5218,21 @@ CAMM data taken from xtbrestart
                   HL-Gap            0.1935642 Eh            5.2672 eV
              Fermi-level           -0.2857195 Eh           -7.7748 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.011 sec
- SCC setup                      ...        0 min,  0.000 sec (  1.558%)
- Dispersion                     ...        0 min,  0.000 sec (  2.280%)
- classical contributions        ...        0 min,  0.000 sec (  1.100%)
- integral evaluation            ...        0 min,  0.001 sec (  7.531%)
- iterations                     ...        0 min,  0.006 sec ( 61.553%)
- molecular gradient             ...        0 min,  0.003 sec ( 24.428%)
- printout                       ...        0 min,  0.000 sec (  1.445%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.008 sec
+ SCC setup                      ...        0 min,  0.000 sec (  3.478%)
+ Dispersion                     ...        0 min,  0.000 sec (  0.906%)
+ classical contributions        ...        0 min,  0.000 sec (  0.324%)
+ integral evaluation            ...        0 min,  0.001 sec (  9.259%)
+ iterations                     ...        0 min,  0.005 sec ( 61.297%)
+ molecular gradient             ...        0 min,  0.002 sec ( 22.748%)
+ printout                       ...        0 min,  0.000 sec (  1.720%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy             -15.776343974340 Eh    ::
          :: gradient norm              0.000400311747 Eh/a0 ::
-         :: HOMO-LUMO gap              5.267150784771 eV    ::
+         :: HOMO-LUMO gap              5.267150784770 eV    ::
          ::.................................................::
          :: SCC energy               -16.046822052809 Eh    ::
          :: -> isotropic ES            0.003108840198 Eh    ::
@@ -5252,7 +5241,7 @@ CAMM data taken from xtbrestart
          :: -> dispersion             -0.007242438611 Eh    ::
          :: repulsion energy           0.270478078469 Eh    ::
          :: add. restraining           0.000000000000 Eh    ::
-         :: total charge              -0.000000000000 e     ::
+         :: total charge               0.000000000000 e     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
@@ -5261,20 +5250,20 @@ Property printout bound to 'properties.out'
            -------------------------------------------------
           | TOTAL ENERGY              -15.776343974340 Eh   |
           | GRADIENT NORM               0.000400311747 Eh/α |
-          | HOMO-LUMO GAP               5.267150784771 eV   |
+          | HOMO-LUMO GAP               5.267150784770 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2026/09/11 at 15:22:45.297     
+ * finished run on 2026/09/11 at 15:52:02.763     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.041 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.158 sec
- * ratio c/w:     3.857 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.015 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.013 sec
+ * ratio c/w:     0.858 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.011 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.042 sec
- * ratio c/w:     3.966 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.008 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.006 sec
+ * ratio c/w:     0.770 speedup
 
 
 -------------------------   --------------------
@@ -5313,7 +5302,7 @@ CARTESIAN GRADIENT
   15   H   :    0.000005676   -0.000077825    0.000000977
 
 Difference to translation invariance:
-           :    0.0000000000   -0.0000000000   -0.0000000000
+           :   -0.0000000000    0.0000000000   -0.0000000000
 
 Difference to rotation invariance:
            :    0.0000000051   -0.0000000173    0.0000000002
@@ -5357,7 +5346,7 @@ Storing new coordinates                 .... done
 The predicted energy change is          ....    -0.000000181
 Previously predicted energy change      ....    -0.000001196
 Actually observed energy change         ....    -0.000001467
-Ratio of predicted to observed change   ....     1.226393090
+Ratio of predicted to observed change   ....     1.226393089
 New trust radius                        ....     0.700000000
 
                                 .--------------------.
@@ -5449,15 +5438,15 @@ New trust radius                        ....     0.700000000
     ----------------------------------------------------------------------------
 
 Geometry step timings:
-Preparation and reading OPT file:      0.000 s ( 0.929 %)
-Internal coordinates            :      0.000 s ( 1.194 %)
-B/P matrices and projection     :      0.000 s (29.728 %)
-Hessian update/contruction      :      0.000 s (20.504 %)
-Making the step                 :      0.000 s (22.893 %)
-Converting the step to Cartesian:      0.000 s ( 2.455 %)
-Storing new data                :      0.000 s ( 1.327 %)
-Checking convergence            :      0.000 s ( 2.389 %)
-Final printing                  :      0.000 s (18.447 %)
+Preparation and reading OPT file:      0.000 s ( 1.721 %)
+Internal coordinates            :      0.000 s ( 1.352 %)
+B/P matrices and projection     :      0.001 s (36.140 %)
+Hessian update/contruction      :      0.000 s (11.924 %)
+Making the step                 :      0.000 s (21.451 %)
+Converting the step to Cartesian:      0.000 s ( 2.336 %)
+Storing new data                :      0.000 s ( 2.274 %)
+Checking convergence            :      0.000 s ( 2.274 %)
+Final printing                  :      0.000 s (20.529 %)
 Total time                      :      0.002 s
                  *******************************************************
                  *** FINAL ENERGY EVALUATION AT THE STATIONARY POINT ***
@@ -5596,7 +5585,7 @@ CARTESIAN COORDINATES (A.U.)
    J. Seibert, P. Shushkov, S. Spicher, M. Stahn, M. Steiner, T. Strunk,
    J. Stückrath, T. Rose, and J. Unsleber
    
- * started run on 2026/09/11 at 15:22:45.308     
+ * started run on 2026/09/11 at 15:52:02.772     
    ID    Z sym.   atoms
     1    6 C      1-5
     2    1 H      6-15
@@ -5605,11 +5594,10 @@ CARTESIAN COORDINATES (A.U.)
           |                Calculation Setup                |
            -------------------------------------------------
 
-          program call               : /apps/eb/ORCA/6.1.1-gompi-2023b-avx2/bin/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 8 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
-          hostname                   : a1-8
+          program call               : /home/tns97255/orca_6_1_1/otool_xtb goat_XTB.xyz --grad -c 0 -u 0 -P 1 --namespace goat --input goat_XTB.input.tmp --acc 0.200000
           calculation namespace      : goat
           coordinate file            : goat_XTB.xyz
-          omp threads                :                     8
+          omp threads                :                     1
 
 
            -------------------------------------------------
@@ -5666,10 +5654,10 @@ CAMM data taken from xtbrestart
 
  iter      E             dE          RMSdq      gap      omega  full diag
    1    -16.0467591 -0.160468E+02  0.198E-03    5.27       0.0  T
-   2    -16.0467591 -0.207692E-08  0.116E-03    5.27      22.3  T
-   3    -16.0467591  0.336424E-09  0.265E-04    5.27      97.4  T
-   4    -16.0467591 -0.254360E-09  0.132E-04    5.27     194.9  T
-   5    -16.0467591 -0.223228E-09  0.248E-05    5.27    1041.1  T
+   2    -16.0467591 -0.207695E-08  0.116E-03    5.27      22.3  T
+   3    -16.0467591  0.336417E-09  0.265E-04    5.27      97.4  T
+   4    -16.0467591 -0.254346E-09  0.132E-04    5.27     194.9  T
+   5    -16.0467591 -0.223231E-09  0.248E-05    5.27    1041.1  T
 
    *** convergence criteria satisfied after 5 iterations ***
 
@@ -5695,21 +5683,21 @@ CAMM data taken from xtbrestart
                   HL-Gap            0.1935536 Eh            5.2669 eV
              Fermi-level           -0.2857195 Eh           -7.7748 eV
 
- SCC (total)                   0 d,  0 h,  0 min,  0.020 sec
- SCC setup                      ...        0 min,  0.007 sec ( 37.054%)
- Dispersion                     ...        0 min,  0.000 sec (  1.279%)
- classical contributions        ...        0 min,  0.000 sec (  0.734%)
- integral evaluation            ...        0 min,  0.001 sec (  3.282%)
- iterations                     ...        0 min,  0.008 sec ( 40.330%)
- molecular gradient             ...        0 min,  0.003 sec ( 16.216%)
- printout                       ...        0 min,  0.000 sec (  1.037%)
+ SCC (total)                   0 d,  0 h,  0 min,  0.010 sec
+ SCC setup                      ...        0 min,  0.000 sec (  1.575%)
+ Dispersion                     ...        0 min,  0.000 sec (  0.641%)
+ classical contributions        ...        0 min,  0.000 sec (  0.190%)
+ integral evaluation            ...        0 min,  0.001 sec (  9.128%)
+ iterations                     ...        0 min,  0.005 sec ( 49.649%)
+ molecular gradient             ...        0 min,  0.003 sec ( 35.386%)
+ printout                       ...        0 min,  0.000 sec (  3.025%)
 
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          ::                     SUMMARY                     ::
          :::::::::::::::::::::::::::::::::::::::::::::::::::::
          :: total energy             -15.776344192963 Eh    ::
          :: gradient norm              0.000107828724 Eh/a0 ::
-         :: HOMO-LUMO gap              5.266860436384 eV    ::
+         :: HOMO-LUMO gap              5.266860436383 eV    ::
          ::.................................................::
          :: SCC energy               -16.046754803428 Eh    ::
          :: -> isotropic ES            0.003106742724 Eh    ::
@@ -5727,20 +5715,20 @@ Property printout bound to 'properties.out'
            -------------------------------------------------
           | TOTAL ENERGY              -15.776344192963 Eh   |
           | GRADIENT NORM               0.000107828724 Eh/α |
-          | HOMO-LUMO GAP               5.266860436384 eV   |
+          | HOMO-LUMO GAP               5.266860436383 eV   |
            -------------------------------------------------
 
 ------------------------------------------------------------------------
- * finished run on 2026/09/11 at 15:22:45.348     
+ * finished run on 2026/09/11 at 15:52:02.793     
 ------------------------------------------------------------------------
  total:
- * wall-time:     0 d,  0 h,  0 min,  0.039 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.141 sec
- * ratio c/w:     3.641 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.021 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.018 sec
+ * ratio c/w:     0.888 speedup
  SCF:
- * wall-time:     0 d,  0 h,  0 min,  0.020 sec
- *  cpu-time:     0 d,  0 h,  0 min,  0.071 sec
- * ratio c/w:     3.564 speedup
+ * wall-time:     0 d,  0 h,  0 min,  0.010 sec
+ *  cpu-time:     0 d,  0 h,  0 min,  0.008 sec
+ * ratio c/w:     0.830 speedup
 
 
 -------------------------   --------------------
@@ -5779,7 +5767,7 @@ Global parameters
   Number of base workers                     ... 4
   Split workers by                           ... 2
   Final number of workers                    ... 8
-  Number of available CPUs                   ... 8
+  Number of available CPUs                   ... 1
   Parameter list (worker : temperature)      ...  0 : 2903.97,  1 : 1451.98, 
                                                   2 :  725.99,  3 :  363.00, 
                                                   4 : 2903.97,  5 : 1451.98, 
@@ -5807,15 +5795,13 @@ Thermodynamics
 ------------------------------------------------------------------------------
    Iter  MinTemp     MaxEn       GradComp    NOpt   NProcs    Output
 ------------------------------------------------------------------------------
-List of participating nodes    ...  goat.goat.0.hostnames
-
-   1     1451.98     45.00    1.00 : 0.50      21        1    goat.goat.0.1.out
    0     2903.97     45.00    1.00 : 0.50      21        1    goat.goat.0.0.out
-   6      725.99     45.00    1.00 : 0.50      21        1    goat.goat.0.6.out
-   4     2903.97     45.00    1.00 : 0.50      21        1    goat.goat.0.4.out
+   1     1451.98     45.00    1.00 : 0.50      21        1    goat.goat.0.1.out
    2      725.99     45.00    1.00 : 0.50      21        1    goat.goat.0.2.out
-   5     1451.98     45.00    1.00 : 0.50      21        1    goat.goat.0.5.out
    3      363.00     45.00    1.00 : 0.50      21        1    goat.goat.0.3.out
+   4     2903.97     45.00    1.00 : 0.50      21        1    goat.goat.0.4.out
+   5     1451.98     45.00    1.00 : 0.50      21        1    goat.goat.0.5.out
+   6      725.99     45.00    1.00 : 0.50      21        1    goat.goat.0.6.out
    7      363.00     45.00    1.00 : 0.50      21        1    goat.goat.0.7.out
 
 			     GOAT Global Iter 1
@@ -5823,17 +5809,15 @@ List of participating nodes    ...  goat.goat.0.hostnames
 		        Hartree      cal/(molK)  kcal/mol
 		=========================================
 
-		   1    -15.776344   1.713       -0.209
+		   1    -15.776344   1.508       -0.191
 
-List of participating nodes    ...  goat.goat.1.hostnames
-
-   6      725.99     45.00    1.00 : 0.50      21        1    goat.goat.1.6.out
-   1     1451.98     45.00    1.00 : 0.50      21        1    goat.goat.1.1.out
-   3      363.00     45.00    1.00 : 0.50      21        1    goat.goat.1.3.out
-   5     1451.98     45.00    1.00 : 0.50      21        1    goat.goat.1.5.out
    0     2903.97     45.00    1.00 : 0.50      21        1    goat.goat.1.0.out
-   4     2903.97     45.00    1.00 : 0.50      21        1    goat.goat.1.4.out
+   1     1451.98     45.00    1.00 : 0.50      21        1    goat.goat.1.1.out
    2      725.99     45.00    1.00 : 0.50      21        1    goat.goat.1.2.out
+   3      363.00     45.00    1.00 : 0.50      21        1    goat.goat.1.3.out
+   4     2903.97     45.00    1.00 : 0.50      21        1    goat.goat.1.4.out
+   5     1451.98     45.00    1.00 : 0.50      21        1    goat.goat.1.5.out
+   6      725.99     45.00    1.00 : 0.50      21        1    goat.goat.1.6.out
    7      363.00     45.00    1.00 : 0.50      21        1    goat.goat.1.7.out
 
 			     GOAT Global Iter 2
@@ -5841,18 +5825,16 @@ List of participating nodes    ...  goat.goat.1.hostnames
 		        Hartree      cal/(molK)  kcal/mol
 		=========================================
 
-		   1    -15.776344   1.713       -0.209
-		   2    -15.776344   1.713       -0.209
+		   1    -15.776344   1.508       -0.191
+		   2    -15.776344   1.508       -0.191
 
-List of participating nodes    ...  goat.goat.2.hostnames
-
-   3      363.00     45.00    1.00 : 0.50      21        1    goat.goat.2.3.out
+   0     2903.97     45.00    1.00 : 0.50      21        1    goat.goat.2.0.out
    1     1451.98     45.00    1.00 : 0.50      21        1    goat.goat.2.1.out
    2      725.99     45.00    1.00 : 0.50      21        1    goat.goat.2.2.out
-   0     2903.97     45.00    1.00 : 0.50      21        1    goat.goat.2.0.out
-   6      725.99     45.00    1.00 : 0.50      21        1    goat.goat.2.6.out
+   3      363.00     45.00    1.00 : 0.50      21        1    goat.goat.2.3.out
    4     2903.97     45.00    1.00 : 0.50      21        1    goat.goat.2.4.out
    5     1451.98     45.00    1.00 : 0.50      21        1    goat.goat.2.5.out
+   6      725.99     45.00    1.00 : 0.50      21        1    goat.goat.2.6.out
    7      363.00     45.00    1.00 : 0.50      21        1    goat.goat.2.7.out
 
 			     GOAT Global Iter 3
@@ -5860,9 +5842,9 @@ List of participating nodes    ...  goat.goat.2.hostnames
 		        Hartree      cal/(molK)  kcal/mol
 		=========================================
 
-		   1    -15.776344   1.713       -0.209
-		   2    -15.776344   1.713       -0.209
-		   3    -15.776344   2.353       -0.279
+		   1    -15.776344   1.508       -0.191
+		   2    -15.776344   1.508       -0.191
+		   3    -15.776344   1.784       -0.215
 
 		Global minimum found!
 		Writing structure to goat.globalminimum.xyz
@@ -5871,17 +5853,15 @@ List of participating nodes    ...  goat.goat.2.hostnames
 		Conformer     Energy     Degen.   % total   % cumul.  
 		              (kcal/mol)
 		------------------------------------------------------
-		        0     0.000	     1      62.48      62.48
-		        1     0.795	     1      16.34      78.82
-		        2     1.197	     1       8.28      87.10
-		        3     1.266	     1       7.38      94.47
-		        4     1.683	     1       3.65      98.12
-		        5     2.076	     1       1.88     100.00
+		        0     0.000	     1      69.55      69.55
+		        1     0.795	     1      18.19      87.73
+		        2     1.266	     1       8.21      95.94
+		        3     1.683	     1       4.06     100.00
 
-		Conformers below 3 kcal/mol: 6
+		Conformers below 3 kcal/mol: 4
 		Lowest energy conformer    : -15.776344 Eh
-		Sconf at 298.15 K          :  2.35 cal/(molK)
-		Gconf at 298.15 K          : -0.28 kcal/mol
+		Sconf at 298.15 K          :  1.78 cal/(molK)
+		Gconf at 298.15 K          : -0.22 kcal/mol
 
 		Writing final ensemble to goat.finalensemble.xyz
 Converting goat.gbw to JSON (see goat.2jsonout) ... FAILED
@@ -5968,9 +5948,9 @@ List of optional additional citations
 
 Timings for individual modules:
 
-Sum of individual times          ...       79.267 sec (=   1.321 min)
-Geometry relaxation              ...        0.022 sec (=   0.000 min)   0.0 %
-GOAT                             ...       78.701 sec (=   1.312 min)  99.3 %
-XTB module                       ...        0.544 sec (=   0.009 min)   0.7 %
+Sum of individual times          ...      330.605 sec (=   5.510 min)
+Geometry relaxation              ...        0.032 sec (=   0.001 min)   0.0 %
+GOAT                             ...      330.252 sec (=   5.504 min)  99.9 %
+XTB module                       ...        0.321 sec (=   0.005 min)   0.1 %
                              ****ORCA TERMINATED NORMALLY****
-TOTAL RUN TIME: 0 days 0 hours 1 minutes 21 seconds 391 msec
+TOTAL RUN TIME: 0 days 0 hours 5 minutes 30 seconds 745 msec
