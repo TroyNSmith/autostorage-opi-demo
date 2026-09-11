@@ -1,0 +1,14 @@
+Metadata-Version: 2.4
+Name: autostorage-opi-demo
+Version: 0.1.0
+Summary: autostorage v0.0.13 + OPI demo.
+Requires-Python: <3.14,>=3.12
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: autostorage==0.0.13
+Requires-Dist: orca-pi==2.0.0
+Requires-Dist: xyzrender==0.3.8
+Dynamic: license-file
+
+# autostorage-opi-demo
+Demo for `autostorage` package using `Orca Python Interface`

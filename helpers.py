@@ -11,6 +11,7 @@ from autostorage import (
     CalculationRow,
     EnergyRow,
     GeometryRow,
+    GradientRow,
     IdentityRow,
     ModelRow,
     Role,
@@ -22,7 +23,30 @@ from sqlalchemy.orm import Session as SASession
 from sqlmodel import Session as SMSession
 from sqlmodel import SQLModel, select
 
-MAX_MEM_MIB = 8000
+MAX_MEM_MIB = 5500
+NPROC = 8
+
+
+def get_orca_version() -> str:
+    """Get the ORCA program version from the system.
+
+    Returns:
+        The ORCA version string (e.g., "6.1.1").
+    """
+    result = subprocess.run(
+        ["orca", "--version"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    output = result.stdout + result.stderr
+
+    # Look for "Program Version X.Y.Z"
+    match = re.search(r"Program Version\s+([\d.]+)", output)
+    if match:
+        return match.group(1)
+
+    raise RuntimeError("Could not determine ORCA version")
 
 
 def get_or_create_model(
@@ -80,7 +104,7 @@ def calculation_exists(
     sess: SASession | SMSession,
     model: ModelRow,
     calc_type: str,
-    structure: Structure,
+    geo: GeometryRow,
 ) -> int | None:
     """Check if a calculation already exists for the given model, calc_type, and structure.
 
@@ -100,14 +124,7 @@ def calculation_exists(
         Calculation.id or None
     """
     # Create a temporary GeometryRow to get the InChI
-    temp_geo = GeometryRow.from_xyz_block(
-        structure.to_xyz_block(),
-        charge=structure.charge,
-        spin=structure.multiplicity + 1,
-    )
-    target_identity = IdentityRow.from_geometry(
-        temp_geo, algorithm=Algorithm.RDKIT_INCHI
-    )
+    target_identity = IdentityRow.from_geometry(geo, algorithm=Algorithm.RDKIT_INCHI)
     target_inchi = target_identity.value
 
     with sess:
@@ -132,56 +149,33 @@ def calculation_exists(
     return None
 
 
-def get_orca_version() -> str:
-    """Get the ORCA program version from the system.
+def run_calc(
+    structure: Structure, work_dir: str | Path, model: ModelRow, calc_type: str
+) -> tuple[CalculationRow, Calculator]:
+    """Run an ORCA calculation for the given structure.
 
-    Returns
-    -------
-        The ORCA version string (e.g., "6.1.1").
+    Args:
+        structure: The molecular structure to run the calculation on
+        work_dir: The directory to store calculation results
+        model: The computational model to use for the calculation
+        calc_type: The type of calculation being run (e.g., "goat")
+
+    Returns:
+        CalculationRow
     """
-    result = subprocess.run(
-        ["orca", "--version"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    output = result.stdout + result.stderr
+    work_dir = Path(work_dir)
+    work_dir.mkdir(parents=True, exist_ok=True)
 
-    # Look for "Program Version X.Y.Z"
-    match = re.search(r"Program Version\s+([\d.]+)", output)
-    if match:
-        return match.group(1)
-
-    raise RuntimeError("Could not determine ORCA version")
-
-
-def run_goat(
-    structure: Structure, work_dir: str | Path, model: ModelRow
-) -> list[SQLModel]:
-    """Run the GOAT calculation for the given structure.
-
-    Parameters
-    ----------
-    structure
-        The molecular structure to run the calculation on.
-    work_dir
-        The directory to store calculation results.
-    model
-        The computational model to use for the calculation.
-
-    Returns
-    -------
-        A list of SQLModel instances representing the calculation results.
-    """
-    calc = Calculator(basename="goat", working_dir=work_dir)
+    calc = Calculator(basename=calc_type, working_dir=work_dir)
     calc.structure = structure
 
     if model.basis is not None:
-        calc.input.add_simple_keywords(model.method, model.basis, "goat")
+        calc.input.add_simple_keywords(model.method, model.basis, calc_type)
     else:
-        calc.input.add_simple_keywords(model.method, "goat")
+        calc.input.add_simple_keywords(model.method, calc_type)
 
     calc.input.memory = MAX_MEM_MIB
+    calc.input.ncores = NPROC
 
     calc.write_input()
     calc.run()
@@ -190,24 +184,33 @@ def run_goat(
     status = output.terminated_normally()
 
     if not status:
-        raise RuntimeError("GOAT calculation did not terminate normally.")
+        raise RuntimeError(f"Calculation did not terminate normally.\n{work_dir = }")
 
     calc_row = CalculationRow(
         model_id=model.id,
-        calc_type="goat",
+        calc_type=calc_type,
         input_provenance={
             "max_mem": f"{MAX_MEM_MIB} MiB",
             "date_created": datetime.datetime.now(tz=datetime.UTC).isoformat(),
         },
     )
 
+    return calc_row, calc
+
+
+def goat(geo: GeometryRow, work_dir: str | Path, model: ModelRow) -> list[SQLModel]:
+    """Run a GOAT calculation."""
+    structure = Structure.from_xyz_block(
+        geo.xyz_block(), charge=geo.charge, multiplicity=geo.spin - 1
+    )
+    calc_row, calc = run_calc(structure, work_dir, model, "goat")
     structures = Structure.from_trj_xyz(work_dir / f"{calc.basename}.finalensemble.xyz")
     properties = Properties.from_trj_xyz(
         work_dir / f"{calc.basename}.finalensemble.xyz", mode="goat"
     )
 
     out_rows = [calc_row]
-    for struc, prop in zip(structures, properties):
+    for struc, prop in zip(structures, properties, strict=True):
         if prop.energy_total is None:
             raise ValueError("Energy total is None for a determined structure.")
 
@@ -220,7 +223,38 @@ def run_goat(
         ene_row = EnergyRow(
             calculation=calc_row, geometry=geo_row, value=prop.energy_total
         )
-        stp_row = StationaryPointRow(calculation=calc_row, geometry=geo_row, order=1)
+        stp_row = StationaryPointRow(calculation=calc_row, geometry=geo_row, order=0)
         out_rows.extend([geo_row, cg_link, ene_row, stp_row])
 
     return out_rows
+
+
+def optimization(
+    geo: GeometryRow, work_dir: str | Path, model: ModelRow
+) -> list[SQLModel]:
+    """Run an optimization calculation."""
+    structure = Structure.from_xyz_block(
+        geo.xyz_block(), charge=geo.charge, multiplicity=geo.spin - 1
+    )
+    calc_row, calc = run_calc(structure, work_dir, model, "opt")
+    output = calc.get_output()
+    output.parse()
+
+    struc = output.get_structure()
+    grad = output.get_gradient(index=-2)
+    ene = output.get_final_energy()
+
+    if not struc or not grad or not ene:
+        raise ValueError("Optimization did not return expected results.")
+
+    geo_row = GeometryRow.from_xyz_block(
+        struc.to_xyz_block(), charge=struc.charge, spin=struc.multiplicity + 1
+    )
+    cg_link = CalculationGeometryLink(
+        calculation=calc_row, geometry=geo_row, role=Role.OUTPUT
+    )
+    ene_row = EnergyRow(calculation=calc_row, geometry=geo_row, value=ene)
+    grad_row = GradientRow(calculation=calc_row, geometry=geo_row, value=grad)
+    stp_row = StationaryPointRow(calculation=calc_row, geometry=geo_row, order=0)
+
+    return [geo_row, cg_link, ene_row, grad_row, stp_row]

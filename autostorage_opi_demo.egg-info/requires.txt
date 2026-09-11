@@ -1,0 +1,3 @@
+autostorage==0.0.13
+orca-pi==2.0.0
+xyzrender==0.3.8

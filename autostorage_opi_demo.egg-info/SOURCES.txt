@@ -1,0 +1,8 @@
+LICENSE
+README.md
+pyproject.toml
+autostorage_opi_demo.egg-info/PKG-INFO
+autostorage_opi_demo.egg-info/SOURCES.txt
+autostorage_opi_demo.egg-info/dependency_links.txt
+autostorage_opi_demo.egg-info/requires.txt
+autostorage_opi_demo.egg-info/top_level.txt

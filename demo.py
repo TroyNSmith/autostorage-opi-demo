@@ -7,7 +7,8 @@ from autostorage import CalculationRow, Database, EnergyRow, GeometryRow
 from opi.input.structures import Structure
 from sqlmodel import select
 
-from helpers import calculation_exists, get_or_create_model, get_orca_version, run_goat
+import helpers
+from helpers import calculation_exists, get_or_create_model, get_orca_version, run_calc
 
 # Clean up the working directory
 work_dir = Path(__file__).resolve().parent / "out"
@@ -36,8 +37,12 @@ with db.session() as sess:
     )
     sess.merge(xtb_model)
 
+    pent2ene_geo = GeometryRow.from_xyz_block(
+        pent2ene.to_xyz_block(), charge=pent2ene.charge, spin=pent2ene.multiplicity + 1
+    )
+
     ## Check if calculation already exists
-    existing_calc = calculation_exists(sess, xtb_model, "goat", pent2ene)
+    existing_calc = calculation_exists(sess, xtb_model, "goat", pent2ene_geo)
     if existing_calc:
         print("GOAT calculation already exists, skipping...")
         ## Query for existing results
@@ -49,7 +54,7 @@ with db.session() as sess:
         min_conf_id: int = lowest_energy.geometry_id
 
     else:
-        goat_rows = run_goat(pent2ene, goat_dir, xtb_model)
+        goat_rows = helpers.goat(pent2ene_geo, goat_dir, xtb_model)
 
         ## Add results to the session
         sess.add_all(goat_rows)
@@ -66,36 +71,60 @@ with db.session() as sess:
     sess.close()
 
 # 2. Optimization of hydroxyl and the lowest energy geometry from the GOAT calculation
-with db.session() as sess:
-    opt_dir = work_dir / "2_Optimization"
-    opt_dir.mkdir(exist_ok=True, parents=True)
+opt_dir = work_dir / "2_Optimization"
+opt_dir.mkdir(exist_ok=True, parents=True)
 
-    ## Get or create the XTB model
-    xtb_model = get_or_create_model(
+## a. pent2ene lowest energy conformer
+with db.session() as sess:
+    wb97x3c_model = get_or_create_model(
         sess,
         program="orca",
-        method="xtb",
+        method="wb97x-3c",
         basis=None,
         program_version=get_orca_version(),
     )
-    sess.merge(xtb_model)  # NOTE: Replace XTB with a different method/basis
+    sess.merge(wb97x3c_model)
 
     ## Get the lowest energy conformation from the GOAT calculation
     min_conf = sess.get(GeometryRow, min_conf_id)
     if min_conf is None:
         raise ValueError(f"Geometry with ID {min_conf_id} not found.")
 
-    min_struc = Structure.from_xyz_block(
-        min_conf.xyz_block(), charge=min_conf.charge, multiplicity=min_conf.spin - 1
-    )
-    raise ValueError(min_struc)
-    existing_calc = calculation_exists(sess, xtb_model, "optimization", min_struc)
+    existing_calc = calculation_exists(sess, wb97x3c_model, "optimization", min_conf)
     if existing_calc:
         print("Optimization calculation already exists, skipping...")
     else:
-        opt_rows = run_goat(
-            min_conf, opt_dir, xtb_model
-        )  # Assuming run_goat can be used for optimization
+        opt_rows = helpers.optimization(min_conf, opt_dir / "pent2ene", wb97x3c_model)
+        sess.add_all(opt_rows)
+
+    sess.flush()
+    sess.commit()
+    sess.close()
+
+## b. hydroxyl
+with db.session() as sess:
+    wb97x3c_model = get_or_create_model(
+        sess,
+        program="orca",
+        method="wb97x-3c",
+        basis=None,
+        program_version=get_orca_version(),
+    )
+    sess.merge(wb97x3c_model)
+
+    hydroxyl_geo = GeometryRow.from_xyz_block(
+        hydroxyl.to_xyz_block(), charge=hydroxyl.charge, spin=hydroxyl.multiplicity + 1
+    )
+
+    existing_calc = calculation_exists(
+        sess, wb97x3c_model, "optimization", hydroxyl_geo
+    )
+    if existing_calc:
+        print("Optimization calculation already exists, skipping...")
+    else:
+        opt_rows = helpers.optimization(
+            hydroxyl_geo, opt_dir / "hydroxyl", wb97x3c_model
+        )
         sess.add_all(opt_rows)
 
     sess.flush()

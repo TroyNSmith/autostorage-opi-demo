@@ -11,6 +11,22 @@ dependencies = [
 
 [tool.ty.environment]
 python = ".venv/bin/python"
+root = ["autostorage_opi_demo"]
 
 [tool.ty.rules]
 unsupported-operator = "ignore"
+
+[tool.ruff]
+src = ["autostorage_opi_demo"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "N999",         # Invalid module name
+    "CPY001",       # Copyright at top of file
+    "COM812",       # Trailing comma
+    "T201",         # Print statement
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
