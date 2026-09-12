@@ -1,8 +1,8 @@
 !xtb
 !goat
-%maxcore 8000
+%maxcore 5700
 %pal
-    nprocs 1
+    nprocs 8
 end
 
 %output

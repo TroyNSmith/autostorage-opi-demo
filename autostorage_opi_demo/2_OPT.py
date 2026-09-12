@@ -1,5 +1,7 @@
 """Optimization of hydroxyl radical and lowest-energy pent2ene conformer."""
 
+import argparse
+
 from autostorage import (
     CalculationGeometryLink,
     CalculationRow,
@@ -24,8 +26,37 @@ from utils import (
     structure_to_geometry,
 )
 
+parser = argparse.ArgumentParser(
+    prog="GOAT Demonstration",
+    description="Run ORCA GOAT on pent2ene and store results in AutoStorage database.",
+)
+parser.add_argument(
+    "-m",
+    "--memory",
+    help="Available memory in GB.",
+    type=int,
+    default=8,
+)
+parser.add_argument(
+    "-n",
+    "--ncores",
+    help="Available number of CPU cores.",
+    type=int,
+    default=1,
+)
+parser.add_argument(
+    "-v",
+    "--verbose",
+    help="Print SQL actions to terminal.",
+    action="store_true",
+)
+args = parser.parse_args()
+
+# Multiply memory by 0.75 as ORCA tends to bleed over alloc per documentation
+mem_mib = int(args.memory * 953.7 * 0.75)
+
 # Set calculation inputs
-calc_input = CalculationInput(memory=5700, ncores=8)
+calc_input = CalculationInput(memory=mem_mib, ncores=args.ncores)
 calc_type = CalculationType.OPT
 
 # Build the working directory
@@ -33,7 +64,7 @@ OPT_DIR = OUT_DIR / "2_OPT"
 OPT_DIR.mkdir(exist_ok=True, parents=True)
 
 # Initialize the database
-db = Database(DB_PATH, echo=False)
+db = Database(DB_PATH, echo=args.verbose)
 
 # Build structures
 pent2ene: Structure = Structure.from_smiles("CC=CCC")
@@ -87,8 +118,8 @@ with db.session() as sess:
 def optimize(db: Database, model: ModelRow, geo_in: GeometryRow) -> GeometryRow:
     """Optimize a geometry at model."""
     with db.session() as sess:
-        sess.merge(model)
-        sess.merge(geo_in)
+        model = sess.merge(model)
+        geo_in = sess.merge(geo_in)
         # Query whether the calculation exists by checking if min_conf's InChI is tagged
         # to a calculation with model=wb97_model and calc_type="opt"
         calc_id = query.calculation(sess, model=model, calc_type=calc_type, geo=geo_in)

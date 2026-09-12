@@ -6,6 +6,8 @@ from automol.geom import Geometry
 from automol.ident import AlgorithmFns, AlgorithmRegistry, Identity, IdentityKind
 from irmsd import Molecule, read_structures, sorter_irmsd_molecule
 
+print(Molecule.__class__)
+
 IRMSD_CONFORMER = "irmsd_conformer"
 
 
@@ -30,7 +32,7 @@ class IrmsdConformerIdentity(AlgorithmFns):
             Molecule(g.symbols, g.coordinates)
             for g in [*list(other_geos.values() or []), geo]
         ]
-        groups, _ = sorter_irmsd_molecule(confs, rthr=0.0001)
+        groups, _ = sorter_irmsd_molecule(confs, rthr=0.125)
         geo_group = groups[-1]
         for key, group in zip(keys, groups[:-1], strict=True):
             if group == geo_group:

@@ -1,6 +1,7 @@
 """Global Optimization of Pent-2-ene with the xTB model."""
 
-from automol.ident import AlgorithmRegistry
+import argparse
+
 from autostorage import (
     CalculationGeometryLink,
     Database,
@@ -22,8 +23,37 @@ from utils import (
     structure_to_geometry,
 )
 
+parser = argparse.ArgumentParser(
+    prog="GOAT Demonstration",
+    description="Run ORCA GOAT on pent2ene and store results in AutoStorage database.",
+)
+parser.add_argument(
+    "-m",
+    "--memory",
+    help="Available memory in GB.",
+    type=int,
+    default=8,
+)
+parser.add_argument(
+    "-n",
+    "--ncores",
+    help="Available number of CPU cores.",
+    type=int,
+    default=1,
+)
+parser.add_argument(
+    "-v",
+    "--verbose",
+    help="Print SQL actions to terminal.",
+    action="store_true",
+)
+args = parser.parse_args()
+
+# Multiply memory by 0.75 as ORCA tends to bleed over alloc per documentation
+mem_mib = int(args.memory * 953.7 * 0.75)
+
 # Set calculation inputs
-calc_input = CalculationInput(memory=8000, ncores=1)
+calc_input = CalculationInput(memory=mem_mib, ncores=args.ncores)
 calc_type = CalculationType.GOAT
 
 # Build the working directory
@@ -31,7 +61,7 @@ GOAT_DIR = OUT_DIR / "1_GOAT"
 GOAT_DIR.mkdir(exist_ok=True, parents=True)
 
 # Initialize the database
-db = Database(DB_PATH, echo=False)
+db = Database(DB_PATH, echo=args.verbose)
 
 # Build structure
 pent2ene: Structure = Structure.from_smiles("CC=CCC")
