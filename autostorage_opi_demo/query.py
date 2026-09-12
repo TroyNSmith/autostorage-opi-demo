@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session as SASession
 from sqlmodel import Session as SMSession
 from sqlmodel import select
 
+from utils import ModelKeywords
+
 
 def get_or_create_model(
     sess: SASession | SMSession,
@@ -13,6 +15,8 @@ def get_or_create_model(
     method: str,
     basis: str | None,
     program_version: str,
+    *,
+    keywords: ModelKeywords | None = None,
 ) -> ModelRow:
     """Get an existing model or create a new one if it doesn't exist.
 
@@ -22,6 +26,7 @@ def get_or_create_model(
         method: The computational method (e.g., "xtb", "b3lyp").
         basis: The basis set (e.g., "def2-TZVP"), or None if not applicable.
         program_version: The version of the program (e.g., "6.1.1").
+        keywords: ModelRow keywords (e.g., auxiliary basis sets, SCF convergence, ...)
 
     Returns:
         The existing or new ModelRow instance.
@@ -33,16 +38,21 @@ def get_or_create_model(
         ModelRow.basis == basis,
         ModelRow.program_version == program_version,
     )
+    if keywords:
+        stmt = stmt.where(ModelRow.keywords == keywords.model_dump())
+
     existing = sess.execute(stmt).scalar_one_or_none()
     if existing is not None:
         return existing
 
     # Otherwise return new model
+    keywords_ = {} if not keywords else keywords.model_dump()
     model = ModelRow(
         program=program,
         method=method,
         basis=basis,
         program_version=program_version,
+        keywords=keywords_,
     )
 
     sess.add(model)

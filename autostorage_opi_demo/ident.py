@@ -6,8 +6,6 @@ from automol.geom import Geometry
 from automol.ident import AlgorithmFns, AlgorithmRegistry, Identity, IdentityKind
 from irmsd import Molecule, read_structures, sorter_irmsd_molecule
 
-print(Molecule.__class__)
-
 IRMSD_CONFORMER = "irmsd_conformer"
 
 

@@ -30,6 +30,7 @@ ignore = [
     "CPY001",       # Copyright at top of file
     "COM812",       # Trailing comma
     "T201",         # Print statement
+    "PLR0913",      # Too many arguments
 ]
 
 [tool.ruff.lint.pydocstyle]

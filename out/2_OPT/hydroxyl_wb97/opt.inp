@@ -1,0 +1,16 @@
+!wb97x-3c
+!opt
+%maxcore 5722
+%pal
+    nprocs 16
+end
+
+%output
+    jsonpropfile True
+    jsongbwfile True
+end
+
+* xyz 0 2
+O             0.4980208900000000             0.0000000000000000             0.0000000000000000
+H            -0.4980208900000000             0.0000000000000000             0.0000000000000000
+*

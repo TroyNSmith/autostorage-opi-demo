@@ -11,7 +11,7 @@ from autostorage import (
 )
 from opi.input.structures import Properties, Structure
 
-import conf_ident  # noqa: F401
+import ident  # noqa: F401
 import query
 from utils import (
     DB_PATH,
@@ -19,8 +19,9 @@ from utils import (
     OUT_DIR,
     CalculationInput,
     CalculationType,
+    get_logger,
     run_calculation,
-    structure_to_geometry,
+    struc_to_geo,
 )
 
 parser = argparse.ArgumentParser(
@@ -48,6 +49,8 @@ parser.add_argument(
     action="store_true",
 )
 args = parser.parse_args()
+
+logger = get_logger(__name__)
 
 # Multiply memory by 0.75 as ORCA tends to bleed over alloc per documentation
 mem_mib = int(args.memory * 953.7 * 0.75)
@@ -78,7 +81,7 @@ with db.session() as sess:
     # Ensure xtb_model is in the current session
     sess.add(xtb_model)
 
-    pent2ene_geo = structure_to_geometry(pent2ene)
+    pent2ene_geo = struc_to_geo(pent2ene)
     # Query whether the calculation exists by checking if pent2ene's InChI is tagged
     # to a calculation with model=xtb_model and calc_type="goat"
     calc_id = query.calculation(
@@ -86,13 +89,13 @@ with db.session() as sess:
     )
 
     if calc_id is not None:
-        print(
-            f"Pre-existing pent2ene GOAT calculation found (id = {calc_id}).\n",
-            "Skipping calculation.",
+        logger.info(
+            "Pre-existing pent2ene GOAT calculation found (id = %s). Skipping calculation.",
+            calc_id,
         )
 
     else:
-        print("Beginning pent2ene GOAT calculation.")
+        logger.info("Beginning pent2ene GOAT calculation.")
         calc_row, calc, _ = run_calculation(
             pent2ene,
             work_dir=GOAT_DIR,
@@ -122,7 +125,7 @@ with db.session() as sess:
                 msg = f"Energy not found for Structure {i} in {trjxyz}."
                 raise ValueError(msg)
 
-            geo_row = structure_to_geometry(struc)
+            geo_row = struc_to_geo(struc)
             ene_row = EnergyRow(calculation=calc_row, geometry=geo_row, value=ene)
             stp_row = StationaryPointRow(
                 calculation=calc_row, geometry=geo_row, order=0

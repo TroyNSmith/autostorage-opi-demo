@@ -37,5 +37,6 @@ trap cleanup EXIT
 module purge
 module load ORCA/6.1.1-gompi-2023b-avx2
 
-uv run python autostorage_opi_demo/1_GOAT.py -m "$MEMORY" -n "$NTASKS" -v
-uv run python autostorage_opi_demo/2_OPT.py -m "$MEMORY" -n "$NTASKS" -v
+# uv run python autostorage_opi_demo/1_GOAT.py -m "$MEMORY" -n "$NTASKS"
+# uv run python autostorage_opi_demo/2_OPT.py -m "$MEMORY" -n "$NTASKS"
+uv run python autostorage_opi_demo/3_SCAN.py -m "$MEMORY" -n "$NTASKS"

@@ -1,7 +1,12 @@
 """Utility variables and functions."""
 
+from opi.input.blocks import Block, BlockGeom
+
+from opi.input.simple_keywords import DispersionCorrection, RelativisticCorrection
+
 import datetime
 import json
+import logging
 import re
 import shutil
 import subprocess
@@ -18,6 +23,40 @@ OUT_DIR = Path(__file__).parent.parent / "out"
 DB_PATH = OUT_DIR / "demo.db"
 
 ORCA_EXE = shutil.which("orca")
+
+
+class _GreenInfoFormatter(logging.Formatter):
+    """Formatter that renders INFO-level records in green ANSI text."""
+
+    GREEN = "\033[32m"
+    RESET = "\033[0m"
+
+    def format(self, record: logging.LogRecord) -> str:
+        message = super().format(record)
+        if record.levelno == logging.INFO:
+            return f"{self.GREEN}{message}{self.RESET}"
+        return message
+
+
+def get_logger(name: str) -> logging.Logger:
+    """Get a module-level logger that prints INFO messages in green.
+
+    Args:
+        name: Name of the logger, typically the calling module's __name__.
+
+    Returns:
+        A configured logger.
+    """
+    logger = logging.getLogger(name)
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(
+            _GreenInfoFormatter("%(asctime)s %(levelname)s %(message)s")
+        )
+        logger.addHandler(handler)
+        logger.setLevel(logging.INFO)
+        logger.propagate = False
+    return logger
 
 
 def get_orca_version() -> str:
@@ -47,10 +86,17 @@ def get_orca_version() -> str:
 ORCA_VERSION = get_orca_version()
 
 
-def structure_to_geometry(struc: Structure) -> GeometryRow:
+def struc_to_geo(struc: Structure) -> GeometryRow:
     """Convert an OPI Structure to an AutoStorage Geometry."""
     return GeometryRow.from_xyz_block(
-        struc.to_xyz_block(), charge=struc.charge, spin=struc.multiplicity + 1
+        struc.to_xyz_block(), charge=struc.charge, spin=struc.multiplicity - 1
+    )
+
+
+def geo_to_struc(geo: GeometryRow) -> Structure:
+    """Convert an AutoStorage Geometry to an OPI Structure."""
+    return Structure.from_xyz_block(
+        geo.xyz_block(), charge=geo.charge, multiplicity=geo.spin + 1
     )
 
 
@@ -66,6 +112,13 @@ class CalculationInput(BaseModel):
 
     memory: int
     ncores: int
+    geom_block: BlockGeom | None = None
+
+
+class ModelKeywords(BaseModel):
+    """Container for Model keywords."""
+
+    corrections: list[str] | None = None
 
 
 def run_calculation(
@@ -93,13 +146,20 @@ def run_calculation(
     calc = Calculator(basename=calc_type, working_dir=work_dir)
     calc.structure = structure
 
-    if model.basis is not None:
-        calc.input.add_simple_keywords(model.method, model.basis, calc_type)
-    else:
-        calc.input.add_simple_keywords(model.method, calc_type)
-
     calc.input.memory = calc_input.memory
     calc.input.ncores = calc_input.ncores
+    calc.input.add_simple_keywords(model.method, calc_type)
+
+    if model.basis:
+        calc.input.add_simple_keywords(model.basis)
+
+    if model.keywords:
+        corrections = model.keywords.get("corrections", None)
+        if corrections:
+            calc.input.add_simple_keywords(*corrections)
+
+    if calc_input.geom_block:
+        calc.input.add_blocks(calc_input.geom_block)
 
     calc.write_input()
     calc.run()
