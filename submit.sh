@@ -27,6 +27,7 @@ cd "${SCRATCH_DIR}"
 
 # Copy only out/* back
 cleanup() {
+    # sleep 15 # Make sure the program is complete
     mkdir -p "${RESULTS_DIR}"
     cp -r "${SCRATCH_DIR}"/out/* "${RESULTS_DIR}/" 2>/dev/null || true
     rm -rf "${SCRATCH_DIR}"

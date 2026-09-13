@@ -6,18 +6,8 @@ from sqlalchemy.orm import Session as SASession
 from sqlmodel import Session as SMSession
 from sqlmodel import select
 
-from utils import ModelKeywords
 
-
-def get_or_create_model(
-    sess: SASession | SMSession,
-    program: str,
-    method: str,
-    basis: str | None,
-    program_version: str,
-    *,
-    keywords: ModelKeywords | None = None,
-) -> ModelRow:
+def get_or_create_model(sess: SASession | SMSession, model: ModelRow) -> ModelRow:
     """Get an existing model or create a new one if it doesn't exist.
 
     Parameters:
@@ -33,35 +23,23 @@ def get_or_create_model(
     """
     # Query for existing model with matching parameters
     stmt = select(ModelRow).where(
-        ModelRow.program == program,
-        ModelRow.method == method,
-        ModelRow.basis == basis,
-        ModelRow.program_version == program_version,
+        ModelRow.program == model.program,
+        ModelRow.method == model.method,
+        ModelRow.basis == model.basis,
+        ModelRow.program_version == model.program_version,
+        ModelRow.keywords == model.keywords,
     )
-    if keywords:
-        stmt = stmt.where(ModelRow.keywords == keywords.model_dump())
 
     existing = sess.execute(stmt).scalar_one_or_none()
     if existing is not None:
         return existing
 
-    # Otherwise return new model
-    keywords_ = {} if not keywords else keywords.model_dump()
-    model = ModelRow(
-        program=program,
-        method=method,
-        basis=basis,
-        program_version=program_version,
-        keywords=keywords_,
-    )
-
     sess.add(model)
     sess.flush()  # Ensure model has an ID
-    sess.commit()
     return model
 
 
-def calculation(
+def calculation_by_inchi(
     sess: SASession | SMSession,
     model: ModelRow,
     calc_type: str,
