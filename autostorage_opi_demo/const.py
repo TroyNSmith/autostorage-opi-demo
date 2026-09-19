@@ -54,9 +54,12 @@ class CalcType(StrEnum):
 
     GOAT = "goat"
     OPT = "opt"
-    NEB_TS = "tight-neb-ts"
+    NEB = "neb"
     SCAN_TS = "ScanTS"
     ENERGY = "Energy"
+    OPT_TS = "optts"
+    FREQ = "Freq"
+    IRC = "IRC"
 
 
 class CalcInput(BaseModel):

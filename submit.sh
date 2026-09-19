@@ -40,7 +40,8 @@ module load ORCA/6.1.1-gompi-2023b-avx2
 
 # $(which orca) out/3_SCAN/scan/scan.inp > "${SUBMIT_DIR}"/hf_scan.log
 
-uv run python autostorage_opi_demo/1_GOAT.py -m "$MEMORY" -n "$NTASKS"
-uv run python autostorage_opi_demo/2_OPT.py -m "$MEMORY" -n "$NTASKS"
-uv run python autostorage_opi_demo/3_SCAN.py -m "$MEMORY" -n "$NTASKS"
-# uv run python autostorage_opi_demo/4_NEB.py -m "$MEMORY" -n "$NTASKS"
+#uv run python autostorage_opi_demo/1_GOAT.py -m "$MEMORY" -n "$NTASKS"
+#uv run python autostorage_opi_demo/2_OPT.py -m "$MEMORY" -n "$NTASKS"
+#uv run python autostorage_opi_demo/3_SCAN.py -m "$MEMORY" -n "$NTASKS"
+#uv run python autostorage_opi_demo/4_NEB.py -m "$MEMORY" -n "$NTASKS"
+uv run python autostorage_opi_demo/5_IRC.py -m "$MEMORY" -n "$NTASKS"

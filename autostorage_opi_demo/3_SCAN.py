@@ -2,7 +2,6 @@
 
 import sys
 
-import numpy as np
 from autostorage import (
     CalculationGeometryLink,
     CalculationRow,
@@ -11,18 +10,15 @@ from autostorage import (
     EnergyRow,
     GeometryTrajectoryLink,
     Role,
-    StationaryPointRow,
     TrajectoryRow,
 )
-from opi.input.blocks import BlockGeom, Constraint, Constraints, Hybrid, NumList, TSMode
+from opi.input.blocks import BlockGeom, Constraint, Constraints
 
 import const
 import ident  # noqa: F401 Ensures the custom identity is being added to registry
 import query
 import utils
-from const import HF3C, HF3C, HYDROXYL, PENT2ENE, XTB, CalcInput, CalcType
-
-FP_ERR = 1e-8  # Floating-point error
+from const import HF3C, HYDROXYL, PENT2ENE, XTB, CalcInput, CalcType
 
 COMPLEX_INCHI = "InChI=1S/C5H9.H2O/c1-3-5-4-2;/h3-5H,1-2H3;1H2"
 
@@ -66,7 +62,7 @@ with db.session() as sess:
     sess.add(XTB)
 
     calc_id = query.calculation_by_inchi(
-        sess, model=XTB, calc_type=CalcType.SCAN_TS, inchi=COMPLEX_INCHI
+        sess, model=XTB, calc_type=CalcType.OPT, inchi=COMPLEX_INCHI
     )
 
     if calc_id is not None:
@@ -115,10 +111,7 @@ with db.session() as sess:
     cg_link_out = CalculationGeometryLink(
         calculation=const_calc, geometry=const_geo, role=Role.OUTPUT
     )
-    stp_row = StationaryPointRow(
-        calculation=const_calc, geometry=const_geo, order=0, is_pseudo=True
-    )
-    rows = [const_calc, complex_geo, const_geo, cg_link_in, cg_link_out, stp_row]
+    rows = [const_calc, complex_geo, const_geo, cg_link_in, cg_link_out]
 
     # SCAN
 
@@ -175,15 +168,8 @@ with db.session() as sess:
             msg = f"Energy not determined for scan point {i}"
             raise ValueError(msg)
         ene_row = EnergyRow(calculation=ene_calc, geometry=geo_row, value=ene)
-        rows.extend([cg_link_in, ene_row])
+        rows.extend([ene_calc, cg_link_in, ene_row])
 
-    # Save the last point as a pseudo stationary point
-    stp_row = StationaryPointRow(
-        calculation=scan_calc, geometry=geo_row, order=0, is_pseudo=True
-    )
-    rows.append(stp_row)
-    sess.flush()
-    raise NotImplementedError(stp_row)
     sess.add_all(rows)
     sess.commit()
     sess.close()

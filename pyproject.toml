@@ -10,6 +10,7 @@ dependencies = [
     # "automol",
     # "autostorage",
     "irmsd>=0.1.1",
+    "orca-parser>=0.2.8",
     "orca-pi==2.0.0",
 ]
 
