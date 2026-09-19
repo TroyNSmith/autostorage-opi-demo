@@ -2,14 +2,14 @@
 #SBATCH --job-name=autostorage-opi-demo
 #SBATCH --partition=batch
 #SBATCH --nodes=1
-#SBATCH --ntasks=16
-#SBATCH --ntasks-per-node=16
+#SBATCH --ntasks=8
+#SBATCH --ntasks-per-node=8
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=8G
 #SBATCH --time=01:00:00
 #SBATCH --gres=lscratch:20
 
-NTASKS=16
+NTASKS=8
 MEMORY=8
 
 set -euo pipefail
@@ -38,6 +38,9 @@ trap cleanup EXIT
 module purge
 module load ORCA/6.1.1-gompi-2023b-avx2
 
-# uv run python autostorage_opi_demo/1_GOAT.py -m "$MEMORY" -n "$NTASKS"
-# uv run python autostorage_opi_demo/2_OPT.py -m "$MEMORY" -n "$NTASKS"
+# $(which orca) out/3_SCAN/scan/scan.inp > "${SUBMIT_DIR}"/hf_scan.log
+
+uv run python autostorage_opi_demo/1_GOAT.py -m "$MEMORY" -n "$NTASKS"
+uv run python autostorage_opi_demo/2_OPT.py -m "$MEMORY" -n "$NTASKS"
 uv run python autostorage_opi_demo/3_SCAN.py -m "$MEMORY" -n "$NTASKS"
+# uv run python autostorage_opi_demo/4_NEB.py -m "$MEMORY" -n "$NTASKS"

@@ -41,7 +41,7 @@ with db.session() as sess:
 
     if calc_id is not None:
         logger.info(
-            "Pre-existing pent2ene GOAT calculation found (id = %s).",
+            "Pre-existing GOAT calculation found (id = %s). Skipping calculation.",
             calc_id,
         )
         sys.exit(0)

@@ -35,4 +35,5 @@ class IrmsdConformerIdentity(AlgorithmFns):
         for key, group in zip(keys, groups[:-1], strict=True):
             if group == geo_group:
                 return key
+
         return str(geo.id)

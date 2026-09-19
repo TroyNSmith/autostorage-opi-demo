@@ -1,13 +1,13 @@
 """Utility variables and functions."""
 
-import tempfile
-
 import argparse
 import json
 import logging
+import tempfile
 from pathlib import Path
 from uuid import UUID
 
+import numpy as np
 from autostorage import CalculationRow, GeometryRow, ModelRow, Role
 from opi.core import Calculator
 from opi.input.structures import Properties, Structure
@@ -17,12 +17,14 @@ from sqlmodel import SQLModel
 
 from const import CalcInput
 
+FP_ERR = 1e-8
+
 
 def get_parser() -> argparse.ArgumentParser:
     """Get a module-level parser."""
     parser = argparse.ArgumentParser(
         prog="AutoStorage Demonstration",
-        description="Run ORCA GOAT on pent2ene and store results in AutoStorage database.",
+        description="Run AutoStorage demo.",
     )
 
     parser.add_argument(
@@ -115,8 +117,8 @@ def run_calculation(
         if corrections:
             calc.input.add_simple_keywords(*corrections)
 
-    if calc_input.geom_block:
-        calc.input.add_blocks(calc_input.geom_block)
+    if calc_input.blocks:
+        calc.input.add_blocks(*calc_input.blocks)
 
     calc.write_input()
     calc.run()
@@ -193,3 +195,70 @@ def get_output_geometry(calc: CalculationRow) -> GeometryRow:
         msg = f"{len(geo_out)} output geometries for {calc.id = }, expected 1."
         raise ValueError(msg)
     return geo_out[0]
+
+
+def _rotation_aligning(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """Get the rotation matrix that rotates unit vector a onto unit vector b."""
+    v = np.cross(a, b)
+    s = np.linalg.norm(v)
+    c = np.dot(a, b)
+    if s < FP_ERR:
+        # a and b are (anti)parallel; any axis perpendicular to a works for a
+        # 180-degree flip, and no rotation is needed for a parallel pair.
+        if c > 0:
+            return np.eye(3)
+        axis = np.eye(3)[np.argmin(np.abs(a))]
+        axis = np.cross(a, axis)
+        axis /= np.linalg.norm(axis)
+        return 2 * np.outer(axis, axis) - np.eye(3)
+
+    vx = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+    return np.eye(3) + vx + vx @ vx * ((1 - c) / s**2)
+
+
+def form_complex(
+    geo1: GeometryRow, geo2: GeometryRow, atom1: int, atom2: int, dist: float
+) -> GeometryRow:
+    """Set the distance from atom1 on geo1 to atom2 on geo2 to dist.
+
+    geo2 is rotated and translated as a rigid body, so its internal
+    coordinates (e.g. bond lengths) are unaffected and none of geo1's
+    internal coordinates are touched.
+
+    The approach direction is the normal to the best-fit plane of geo1's
+    atoms, oriented toward atom1's side of that plane, which keeps geo2 from
+    overlapping with the rest of geo1. geo2 is rotated about atom2 so that
+    the vector from atom2 toward the rest of geo2 points along that same
+    direction, i.e. away from geo1.
+    """
+    geo1_xyzs = geo1.coordinates
+    geo2_xyzs = geo2.coordinates
+
+    atom1_xyz = geo1_xyzs[atom1]
+
+    centroid1 = geo1_xyzs.mean(axis=0)
+    _, _, vh = np.linalg.svd(geo1_xyzs - centroid1)
+    normal = vh[-1] / np.linalg.norm(vh[-1])
+    if np.dot(atom1_xyz - centroid1, normal) < 0:
+        normal = -normal
+
+    atom2_xyz = geo2_xyzs[atom2]
+    rest_mask = np.arange(len(geo2_xyzs)) != atom2
+    rest_centroid = geo2_xyzs[rest_mask].mean(axis=0)
+    direction = rest_centroid - atom2_xyz
+    direction_norm = np.linalg.norm(direction)
+    if direction_norm > FP_ERR:
+        rotation = _rotation_aligning(direction / direction_norm, normal)
+        geo2_xyzs = (geo2_xyzs - atom2_xyz) @ rotation.T + atom2_xyz
+
+    target_xyz = atom1_xyz + dist * normal
+    geo2_xyzs = geo2_xyzs + (target_xyz - geo2_xyzs[atom2])
+
+    complex_xyzs = np.vstack([geo1_xyzs, geo2_xyzs])
+    complex_syms = geo1.symbols + geo2.symbols
+    return GeometryRow(
+        symbols=complex_syms,
+        coordinates=complex_xyzs,
+        charge=geo1.charge + geo2.charge,
+        spin=geo1.spin + geo2.spin,
+    )

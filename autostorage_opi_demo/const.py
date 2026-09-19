@@ -7,7 +7,7 @@ from enum import StrEnum
 from pathlib import Path
 
 from autostorage import ModelRow
-from opi.input.blocks import BlockGeom
+from opi.input.blocks import BlockGeom, BlockNeb
 from opi.input.structures import Structure
 from pydantic import BaseModel
 
@@ -54,6 +54,9 @@ class CalcType(StrEnum):
 
     GOAT = "goat"
     OPT = "opt"
+    NEB_TS = "tight-neb-ts"
+    SCAN_TS = "ScanTS"
+    ENERGY = "Energy"
 
 
 class CalcInput(BaseModel):
@@ -61,7 +64,7 @@ class CalcInput(BaseModel):
 
     memory: int  # GB
     ncores: int
-    geom_block: BlockGeom | None = None
+    blocks: list[BlockGeom | BlockNeb] | None = None
 
 
 class ModelKeywords(BaseModel):
@@ -76,15 +79,15 @@ XTB = ModelRow(
     basis=None,
     program_version=ORCA_VERSION,
 )
-WB97X = ModelRow(
-    program="ORCA",
-    method="wb97x-3c",
-    basis=None,
-    program_version=ORCA_VERSION,
-)
-B3LYP = ModelRow(
+HF3C = ModelRow(
     program="ORCA",
     method="B3LYP",
-    basis="6-31G(d)",
+    basis="SV(P)",
+    program_version=ORCA_VERSION,
+)
+HF3C = ModelRow(
+    program="ORCA",
+    method="HF-3c",
+    basis=None,
     program_version=ORCA_VERSION,
 )

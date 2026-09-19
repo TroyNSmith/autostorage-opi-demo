@@ -43,7 +43,8 @@ def calculation_by_inchi(
     sess: SASession | SMSession,
     model: ModelRow,
     calc_type: str,
-    geo: GeometryRow,
+    geo: GeometryRow | None = None,
+    inchi: str | None = None,
 ) -> int | None:
     """Check if a calculation already exists for the given model, calc_type, and geo.
 
@@ -55,16 +56,22 @@ def calculation_by_inchi(
         model: The computational model to check for.
         calc_type: The type of calculation (e.g., "goat").
         geo: The molecular geometry to check for (uses InChI for comparison).
+        inchi: InChI string to query.
 
     Returns: Calculation.id or None
     """
-    # Create a temporary GeometryRow to get the InChI
-    target_identity = IdentityRow.from_geometry(geo, algorithm=RDKIT_INCHI)
-    target_inchi = target_identity.value
+    if not (inchi or geo):
+        msg = "InChI or GeometryRow required for query."
+        raise ValueError(msg)
+
+    if geo and not inchi:
+        # Create a temporary GeometryRow to get the InChI
+        target_identity = IdentityRow.from_geometry(geo, algorithm=RDKIT_INCHI)
+        inchi = target_identity.value
 
     identity_stmt = select(IdentityRow).where(
         IdentityRow.algorithm == RDKIT_INCHI,
-        IdentityRow.value == target_inchi,
+        IdentityRow.value == inchi,
     )
     identities = sess.execute(identity_stmt).all()
     for (ident,) in identities:

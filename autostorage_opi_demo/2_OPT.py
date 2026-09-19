@@ -18,7 +18,7 @@ import const
 import ident  # noqa: F401 Ensures the custom identity is being added to registry
 import query
 import utils
-from const import HYDROXYL, PENT2ENE, WB97X, XTB, CalcInput, CalcType
+from const import HF3C, HYDROXYL, PENT2ENE, XTB, CalcInput, CalcType
 
 parser = utils.get_parser()
 args = parser.parse_args()
@@ -98,9 +98,9 @@ def optimize(
 
 with db.session() as sess:
     # Ensure all models are in the database
-    xtb = query.get_or_create_model(sess, XTB)
-    wb97x = query.get_or_create_model(sess, WB97X)
-    sess.add_all([xtb, wb97x])
+    XTB = query.get_or_create_model(sess, XTB)
+    HF3C = query.get_or_create_model(sess, HF3C)
+    sess.add_all([XTB, HF3C])
     sess.commit()
 
     # Query whether the goat calculation exists by checking if pent2ene's InChI is
@@ -108,7 +108,7 @@ with db.session() as sess:
     # geometry with the lowest energy for further optimization
     pent2ene_geo = utils.struc_to_geo(PENT2ENE)
     goat_id = query.calculation_by_inchi(
-        sess, model=xtb, calc_type=CalcType.GOAT, geo=pent2ene_geo
+        sess, model=XTB, calc_type=CalcType.GOAT, geo=pent2ene_geo
     )
     goat_row = utils.row_from_id(sess, CalculationRow, goat_id)
     sess.merge(goat_row)
@@ -120,8 +120,8 @@ with db.session() as sess:
     sess.close()
 
 # Optimize pent2ene
-pent2ene_wb97 = optimize(db, wb97x, pent2ene_min, OPT_DIR / "pent2ene_wb97")
+optimize(db, HF3C, pent2ene_min, OPT_DIR / "pent2ene")
 
 # Optimize hydroxyl
 hydroxyl_geo = utils.struc_to_geo(HYDROXYL)
-hydroxyl_wb97 = optimize(db, wb97x, hydroxyl_geo, OPT_DIR / "hydroxyl_wb97")
+optimize(db, HF3C, hydroxyl_geo, OPT_DIR / "hydroxyl")
