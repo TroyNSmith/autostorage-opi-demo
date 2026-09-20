@@ -1,8 +1,0 @@
-----------
-ORCA_2JSON
-----------
-
-Reading the gbw file     ... opt.gbw done
-Creating JSON Objects    ... 
-
-No JSON configure files (opt.json.conf orca.json.conf) are found - preparing full output but without integrals and densities

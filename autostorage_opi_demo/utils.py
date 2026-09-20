@@ -102,32 +102,27 @@ def run_calculation(
     work_dir.mkdir(parents=True, exist_ok=True)
 
     calc = Calculator(basename=calc_type, working_dir=work_dir)
-    calc.structure = struc
-
-    # Convert memory to MiB and reduce to account for ORCA over-consumption
-    calc.input.memory = int(calc_input.memory * 953.674 * 0.75)
-    calc.input.ncores = calc_input.ncores
-    calc.input.add_simple_keywords(model.method, calc_type)
-
-    if model.basis:
-        calc.input.add_simple_keywords(model.basis)
-
-    if model.keywords:
-        corrections = model.keywords.get("corrections", None)
-        if corrections:
-            calc.input.add_simple_keywords(*corrections)
-
-    if calc_input.blocks:
-        calc.input.add_blocks(*calc_input.blocks)
-
-    calc.write_input()
-    calc.run()
-
     output = calc.get_output()
-    output.parse()
+    if not output.terminated_normally():
+        calc.structure = struc
+        # Convert memory to MiB and scale to account for ORCA over-consumption
+        calc.input.memory = int(calc_input.memory * 953.674 * 0.75)
+        calc.input.ncores = calc_input.ncores
+        calc.input.add_simple_keywords(model.method, calc_type)
 
-    outfile = output.get_outfile()
+        if model.basis:
+            calc.input.add_simple_keywords(model.basis)
+
+        if calc_input.blocks:
+            calc.input.add_blocks(*calc_input.blocks)
+
+        calc.write_input()
+        calc.run()
+        output = calc.get_output()
+
+    output.parse()
     # Verify that ORCA terminated normally
+    outfile = output.get_outfile()
     if not output.terminated_normally():
         msg = f"ORCA calculation failed, see output file: {outfile}"
         raise RuntimeError(msg)

@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from automol.ident import RDKIT_INCHI
 from autostorage import (
     CalculationGeometryLink,
     CalculationRow,
@@ -9,10 +10,13 @@ from autostorage import (
     EnergyRow,
     GeometryRow,
     GradientRow,
+    IdentityRow,
     ModelRow,
     Role,
     StationaryPointRow,
 )
+from autostorage.models import IdentityStationaryLink
+from sqlmodel import select
 
 import const
 import ident  # noqa: F401 Ensures the custom identity is being added to registry
@@ -33,67 +37,80 @@ db = Database(const.OUT_DIR / "demo.db", echo=args.verbose)
 
 
 def optimize(
-    db: Database, model: ModelRow, geo_in: GeometryRow, work_dir: str | Path
+    db: Database, model: ModelRow, geo: GeometryRow, work_dir: str | Path
 ) -> GeometryRow:
     """Optimize a geometry at model."""
     with db.session() as sess:
         work_dir = Path(work_dir)
         work_dir.mkdir(parents=True, exist_ok=True)
 
-        # Assumes that model and geo_in are already assigned IDs in the database
-        model = sess.merge(model)
-        geo_in = sess.merge(geo_in)
+        # Ensure model and geo are in the session
+        sess.add_all([model, geo])
+        sess.flush()
 
-        calc_id = query.calculation_by_inchi(
-            sess, model=model, calc_type=CalcType.OPT, geo=geo_in
-        )
-
-        if calc_id is not None:
-            logger.info(
-                "Pre-existing OPT calculation found (id = %s). Skipping calculation.",
-                calc_id,
+        stmt = (
+            select(CalculationRow)
+            .join(
+                CalculationGeometryLink,
+                CalculationRow.id == CalculationGeometryLink.calculation_id,  # ty: ignore[invalid-argument-type]
             )
-            calc_row = utils.row_from_id(sess, CalculationRow, calc_id)
-            return utils.get_output_geometry(calc_row)
+            .join(GeometryRow, GeometryRow.id == CalculationGeometryLink.geometry_id)  # ty: ignore[invalid-argument-type]
+            .join(IdentityStationaryLink)  # Need to include the link
+            .join(IdentityRow)
+            .where(
+                CalculationRow.model_id == XTB.id,
+                CalculationRow.calc_type == CalcType.GOAT,
+                CalculationGeometryLink.role == Role.INPUT,
+                GeometryRow.id == geo.id,
+            )
+        )
+        opt_calc = sess.execute(stmt).first()
+        if opt_calc is not None:
+            logger.info(
+                "Pre-existing OPT found (id = %s). Skipping calculation.",
+                opt_calc[0].id,
+            )
+            return next(
+                cgl.geometry
+                for cgl in opt_calc.geometry_links
+                if cgl.role == Role.OUTPUT
+            )
 
-        logger.info("Beginning OPT calculation.")
-        structure = utils.geo_to_struc(geo_in)
-        calc_input = CalcInput(memory=args.memory, ncores=args.ncores)
-        calc_row, _, output = utils.run_calculation(
-            structure,
+        logger.info("Beginning OPT calculation for geo %s.", geo.id)
+        opt_calc, _, opt_output = utils.run_calculation(
+            struc=geo,
             work_dir=work_dir,
             model=model,
             calc_type=CalcType.OPT,
-            calc_input=calc_input,
+            calc_input=CalcInput(memory=args.memory, ncores=args.ncores),
         )
         # Link input Geometry to Calculation
         cg_link_in = CalculationGeometryLink(
-            calculation=calc_row, geometry=geo_in, role=Role.INPUT
+            calculation=opt_calc, geometry=geo, role=Role.INPUT
         )
-        sess.add_all([calc_row, cg_link_in])
+        sess.add_all([opt_calc, cg_link_in])
 
-        struc = output.get_structure()
-        grad = output.get_gradient(index=-2)  # Last gradient calculated
-        ene = output.get_final_energy()
+        struc = opt_output.get_structure()
+        grad = opt_output.get_gradient(index=-2)  # Last gradient calculated
+        ene = opt_output.get_final_energy()
 
         if not struc or not grad or not ene:
-            msg = "Optimization output did not return expected results."
+            msg = "Optimization output did not parse expected results."
             raise ValueError(msg)
 
-        geo_out = utils.struc_to_geo(struc)
-        ene_out = EnergyRow(calculation=calc_row, geometry=geo_out, value=ene)
-        grad_out = GradientRow(calculation=calc_row, geometry=geo_out, value=grad)
-        stp_out = StationaryPointRow(calculation=calc_row, geometry=geo_out, order=0)
-
-        cg_link_out = CalculationGeometryLink(
-            calculation=calc_row, geometry=geo_out, role=Role.OUTPUT
+        opt_geo = utils.struc_to_geo(struc)
+        opt_ene = EnergyRow(calculation=opt_calc, geometry=opt_geo, value=ene)
+        opt_gra = GradientRow(calculation=opt_calc, geometry=opt_geo, value=grad)
+        opt_stp = StationaryPointRow(calculation=opt_calc, geometry=opt_geo, order=0)
+        cgl_out = CalculationGeometryLink(
+            calculation=opt_calc, geometry=opt_geo, role=Role.OUTPUT
         )
 
-        sess.add_all([geo_out, ene_out, grad_out, stp_out, cg_link_out])
+        sess.add_all([opt_geo, opt_ene, opt_gra, opt_stp, cgl_out])
         sess.commit()
         sess.close()
 
-        return geo_out
+        return opt_geo
 
 
 with db.session() as sess:
