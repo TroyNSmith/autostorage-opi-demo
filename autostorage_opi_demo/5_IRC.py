@@ -10,6 +10,7 @@ from autostorage import (
     GeometryTrajectoryLink,
     GradientRow,
     HessianRow,
+    IdentityAlgorithmRow,
     IdentityRow,
     Role,
     StageRow,
@@ -49,19 +50,16 @@ while True:
 
         stmt = (
             select(GeometryRow)
-            # 1. Join StationaryPointRow (Explicit onclause keyword used)
             .join(
                 target=StationaryPointRow,
                 onclause=(col(StationaryPointRow.geometry_id) == col(GeometryRow.id)),
             )
-            # 2. Join CalculationRow
             .join(
                 target=CalculationRow,
                 onclause=(
                     col(CalculationRow.id) == col(StationaryPointRow.calculation_id)
                 ),
             )
-            # 3. Join the Many-to-Many Link table
             .join(
                 target=IdentityStationaryLink,
                 onclause=(
@@ -69,19 +67,21 @@ while True:
                     == col(StationaryPointRow.id)
                 ),
             )
-            # 4. Join IdentityRow
             .join(
                 target=IdentityRow,
                 onclause=(
                     col(IdentityRow.id) == col(IdentityStationaryLink.identity_id)
                 ),
             )
-            # 5. Apply all static filters cleanly in WHERE
+            .join(
+                target=IdentityAlgorithmRow,
+                onclause=col(IdentityAlgorithmRow.id) == col(IdentityRow.algorithm_id),
+            )
             .where(
                 col(CalculationRow.model_id) == HF3C.id,
                 col(CalculationRow.calc_type) == CalcType.OPT_TS,
-                col(IdentityRow.algorithm) == "rdkit inchi",
                 col(IdentityRow.value).startswith("InChI=1S/C5H11O/"),
+                col(IdentityAlgorithmRow.name) == "rdkit inchi",
             )
         )
         # .one() will raise an Error if len(scan_trj) != 1
@@ -173,20 +173,20 @@ while True:
         stmt = (
             select(StepRow)
             .join(
-                StageRow,
+                target=StageRow,
                 onclause=col(StageRow.id) == col(StepRow.stage_id_ts),
             )
             .join(
-                StageStationaryLink,
+                target=StageStationaryLink,
                 onclause=col(StageStationaryLink.stage_id) == col(StageRow.id),
             )
             .join(
-                StationaryPointRow,
+                target=StationaryPointRow,
                 onclause=col(StationaryPointRow.id)
                 == col(StageStationaryLink.stationary_id),
             )
             .join(
-                CalculationRow,
+                target=CalculationRow,
                 onclause=col(CalculationRow.id)
                 == col(StationaryPointRow.calculation_id),
             )
@@ -206,13 +206,15 @@ while True:
 
         sess.add_all(rows)
         sess.commit()
-        sess.close()
         break
 
 # 2. Optimize backwards minima
 with db.session() as sess:
-    HF3C = query.get_or_create_model(sess, model=HF3C)
-    sess.add(HF3C)
+    if HF3C.id:
+        HF3C = sess.merge(HF3C)
+    else:
+        HF3C = query.get_or_create_model(sess, model=HF3C)
+        sess.add(HF3C)
 
     # Merge relevant rows from IRC
     irc_calc = sess.merge(irc_calc)
@@ -223,7 +225,7 @@ with db.session() as sess:
         for stg in [step_row.stage1, step_row.stage2]
         for stp in stg.stationaries
         for ident in stp.identities
-        if ident.algorithm == "irmsd_conformer"
+        if ident.algorithm.name == "irmsd_conformer"
     }
     to_reconcile = {}
     rows = []
@@ -298,7 +300,7 @@ with db.session() as sess:
 
         # Check if the IRC end points match the original guesses
         conf_id = next(
-            i.value for i in opt_stp.identities if i.algorithm == "irmsd_conformer"
+            i.value for i in opt_stp.identities if i.algorithm.name == "irmsd_conformer"
         )
         if conf_id in conf_ids:
             stp_id_old = conf_ids.pop(conf_id)

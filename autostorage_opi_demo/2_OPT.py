@@ -13,16 +13,17 @@ from autostorage import (
     ModelRow,
     Role,
     StationaryPointRow,
+    IdentityAlgorithmRow,
 )
 from autostorage.models import IdentityStationaryLink
-from sqlalchemy import and_
-from sqlmodel import select, col
+from opi.input.structures import Structure
+from sqlmodel import col, select
 
 import const
 import ident  # noqa: F401 Ensures the custom identity is being added to registry
 import query
 import utils
-from const import HF3C, HYDROXYL, XTB, CalcInput, CalcType
+from const import HF3C, XTB, CalcInput, CalcType
 
 parser = utils.get_parser()
 args = parser.parse_args()
@@ -35,6 +36,9 @@ OPT_DIR.mkdir(exist_ok=True, parents=True)
 # Initialize the database
 db = Database(const.OUT_DIR / "demo.db", echo=args.verbose)
 
+# Pent2ene InChI for lookup
+pent2ene_inchi = "InChI=1S/C5H10/c1-3-5-4-2/h3,5H,4H2,1-2H3/b5-3+"
+
 
 def optimize(
     db: Database, model: ModelRow, geo: GeometryRow, work_dir: str | Path
@@ -46,18 +50,18 @@ def optimize(
 
         # Ensure model and geo are in the session
         sess.add_all([model, geo])
-        sess.flush()
 
         stmt = (
             select(CalculationRow)
             .join(
-                CalculationGeometryLink,
+                target=CalculationGeometryLink,
                 onclause=col(CalculationGeometryLink.calculation_id)
                 == col(CalculationRow.id),
             )
             .join(
-                GeometryRow,
-                col(GeometryRow.id) == col(CalculationGeometryLink.geometry_id),
+                target=GeometryRow,
+                onclause=col(GeometryRow.id)
+                == col(CalculationGeometryLink.geometry_id),
             )
             .where(
                 col(CalculationRow.model_id) == XTB.id,
@@ -87,10 +91,10 @@ def optimize(
             calc_input=CalcInput(memory=args.memory, ncores=args.ncores),
         )
         # Link input Geometry to Calculation
-        cg_link_in = CalculationGeometryLink(
+        cgl_in = CalculationGeometryLink(
             calculation=opt_calc, geometry=geo, role=Role.INPUT
         )
-        sess.add_all([opt_calc, cg_link_in])
+        sess.add_all([opt_calc, cgl_in])
 
         struc = opt_output.get_structure()
         grad = opt_output.get_gradient(index=-2)  # Last gradient calculated
@@ -120,7 +124,6 @@ with db.session() as sess:
     XTB = query.get_or_create_model(sess, XTB)
     HF3C = query.get_or_create_model(sess, HF3C)
     sess.add_all([XTB, HF3C])
-    sess.commit()
 
     # Query whether the goat calculation exists by checking if pent2ene's InChI is
     # tagged to a calculation with model=xtb_model and calc_type="goat". Then, fetch the
@@ -129,22 +132,27 @@ with db.session() as sess:
         select(CalculationRow)
         .join(
             target=StationaryPointRow,
-            onclause=col(CalculationRow.id) == col(StationaryPointRow.calculation_id),
+            onclause=col(StationaryPointRow.calculation_id) == col(CalculationRow.id),
         )
         .join(
             target=IdentityStationaryLink,
-            onclause=StationaryPointRow.id == IdentityStationaryLink.stationary_id,  # ty: ignore[invalid-argument-type]
+            onclause=col(IdentityStationaryLink.stationary_id)
+            == col(StationaryPointRow.id),
         )
         .join(
             target=IdentityRow,
-            onclause=IdentityStationaryLink.identity_id == IdentityRow.id,  # ty: ignore[invalid-argument-type]
+            onclause=col(IdentityRow.id) == col(IdentityStationaryLink.identity_id),
+        )
+        .join(
+            target=IdentityAlgorithmRow,
+            onclause=col(IdentityAlgorithmRow.id) == col(IdentityRow.algorithm_id),
         )
         .where(
-            CalculationRow.model_id == XTB.id,
-            CalculationRow.calc_type == CalcType.GOAT,
+            col(CalculationRow.model_id) == XTB.id,
+            col(CalculationRow.calc_type) == CalcType.GOAT,
             col(StationaryPointRow.is_pseudo).is_(False),
-            IdentityRow.algorithm == "rdkit inchi",  # ty: ignore[invalid-argument-type]
-            IdentityRow.value == "InChI=1S/C5H10/c1-3-5-4-2/h3,5H,4H2,1-2H3/b5-3+",  # ty: ignore[invalid-argument-type]
+            col(IdentityRow.value) == pent2ene_inchi,
+            col(IdentityAlgorithmRow.name) == "rdkit inchi",
         )
     )
     goat_calc: CalculationRow | None = sess.scalars(stmt).first()
@@ -174,5 +182,6 @@ with db.session() as sess:
 optimize(db, HF3C, pent2ene_min, OPT_DIR / "pent2ene")
 
 # Optimize hydroxyl
-hydroxyl_geo = utils.struc_to_geo(HYDROXYL)
+hydroxyl_struc = Structure.from_smiles("[OH]")
+hydroxyl_geo = utils.struc_to_geo(hydroxyl_struc)
 optimize(db, HF3C, hydroxyl_geo, OPT_DIR / "hydroxyl")

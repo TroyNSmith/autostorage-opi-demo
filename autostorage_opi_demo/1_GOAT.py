@@ -1,22 +1,21 @@
 """Global Optimization of Pent2ene with the xTB model."""
 
-from automol import rdkit_inchi
-
 import sys
 
+from automol import rdkit_inchi
 from autostorage import (
     CalculationGeometryLink,
     CalculationRow,
     Database,
     EnergyRow,
+    IdentityAlgorithmRow,
     IdentityRow,
     Role,
     StationaryPointRow,
-    IdentityAlgorithmRow,
 )
 from autostorage.models import IdentityStationaryLink
 from opi.input.structures import Structure
-from sqlmodel import select, col, text
+from sqlmodel import col, select, text
 
 import const
 import ident  # noqa: F401 Ensures the custom identity is being added to registry
@@ -41,29 +40,28 @@ pent2ene_inchi = "InChI=1S/C5H10/c1-3-5-4-2/h3,5H,4H2,1-2H3/b5-3+"
 with db.session() as sess:
     # Query for existing xtb/hf-3c models or create new ones and add to session
     XTB = query.get_or_create_model(sess, model=XTB)
-    sess.add(XTB)
     HF3C = query.get_or_create_model(sess, model=HF3C)
-    sess.add(HF3C)
+    sess.add_all([XTB, HF3C])
 
     # Query whether the calculation exists by checking if pent2ene's InChI is tagged
     # to a calculation with model_id==XTB.id and calc_type==CalcType.GOAT ("goat")
     stmt = (
         select(CalculationRow)
         .join(
-            StationaryPointRow,
+            target=StationaryPointRow,
             onclause=col(StationaryPointRow.calculation_id) == col(CalculationRow.id),
         )  # Identity is linked to the Stationary
         .join(
-            IdentityStationaryLink,
+            target=IdentityStationaryLink,
             onclause=col(IdentityStationaryLink.stationary_id)
             == col(StationaryPointRow.id),
         )  # Need to include the link
         .join(
-            IdentityRow,
+            target=IdentityRow,
             onclause=col(IdentityRow.id) == col(IdentityStationaryLink.identity_id),
         )
         .join(
-            IdentityAlgorithmRow,
+            target=IdentityAlgorithmRow,
             onclause=col(IdentityAlgorithmRow.id) == col(IdentityRow.algorithm_id),
         )
         .where(
@@ -73,7 +71,7 @@ with db.session() as sess:
             col(IdentityAlgorithmRow.name) == rdkit_inchi.name,
         )
     )
-    goat_calc = sess.scalars(stmt).first()
+    goat_calc: CalculationRow | None = sess.scalars(stmt).first()
     if goat_calc is not None:
         logger.info(
             "Pre-existing GOAT calculation found (id = %s). Skipping calculation.",
@@ -87,17 +85,17 @@ with db.session() as sess:
 
     logger.info("Beginning pent2ene GOAT calculation.")
     goat_calc, goat_calculator, _ = utils.run_calculation(
-        pent2ene_geo,
+        struc=pent2ene_geo,
         work_dir=GOAT_DIR / "goat",
         model=XTB,
         calc_type=CalcType.GOAT,
         calc_input=CalcInput(memory=args.memory, ncores=args.ncores),
     )
     # Link input Geometry to Calculation
-    cg_link_in = CalculationGeometryLink(
+    cgl_in = CalculationGeometryLink(
         calculation=goat_calc, geometry=pent2ene_geo, role=Role.INPUT
     )
-    rows = [goat_calc, pent2ene_geo, cg_link_in]
+    rows = [goat_calc, pent2ene_geo, cgl_in]
 
     for i, struc in enumerate(
         Structure.from_trj_xyz(GOAT_DIR / "goat/goat.finalensemble.xyz")
@@ -106,20 +104,20 @@ with db.session() as sess:
         # Store the Geometry as a Stationary Point
         stp_row = StationaryPointRow(calculation=goat_calc, geometry=geo_row, order=0)
         # Link output Geometry to Calculation
-        cg_link_out = CalculationGeometryLink(
+        cgl_out = CalculationGeometryLink(
             calculation=goat_calc, geometry=geo_row, role=Role.OUTPUT
         )
-        rows.extend([geo_row, stp_row, cg_link_out])
+        rows.extend([geo_row, stp_row, cgl_out])
 
         # Compute the energies separately for a better profile vs. xTB
         ene_calc, _, ene_output = utils.run_calculation(
-            geo_row,
+            struc=geo_row,
             work_dir=GOAT_DIR / f"ene_{i}",
             model=HF3C,
             calc_type=CalcType.ENERGY,
             calc_input=CalcInput(memory=args.memory, ncores=args.ncores),
         )
-        cg_link_in = CalculationGeometryLink(
+        cgl_in = CalculationGeometryLink(
             calculation=ene_calc, geometry=geo_row, role=Role.INPUT
         )
         ene = ene_output.get_final_energy()
@@ -128,7 +126,7 @@ with db.session() as sess:
             raise ValueError(msg)
 
         ene_row = EnergyRow(calculation=ene_calc, geometry=geo_row, value=ene)
-        rows.extend([ene_calc, cg_link_in, ene_row])
+        rows.extend([ene_calc, cgl_in, ene_row])
 
     sess.add_all(rows)
     # Flush and enter (commit) the new rows
