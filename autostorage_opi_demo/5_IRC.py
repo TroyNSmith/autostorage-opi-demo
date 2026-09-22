@@ -1,9 +1,5 @@
 """Intrinsic Reaction Coordinate validation."""
 
-import sys
-from typing import Any
-
-from automol.ident import RDKIT_INCHI
 from autostorage import (
     CalculationGeometryLink,
     CalculationRow,
@@ -26,15 +22,13 @@ from autostorage.models import IdentityStationaryLink, StageStationaryLink
 from opi.input.structures import Properties, Structure
 from orca_parser import HessianTools
 from sqlalchemy import or_
-from sqlmodel import select
+from sqlmodel import col, select
 
 import const
 import ident  # noqa: F401 Ensures the custom identity is being added to registry
 import query
 import utils
 from const import HF3C, XTB, CalcInput, CalcType
-
-ts_inchi = "InChI=1S/C5H11O/c1-3-4-5(2)7-6/h3-6H,1-2H3/b4-3+/t5-/m1/s1"
 
 parser = utils.get_parser()
 args = parser.parse_args()
@@ -50,41 +44,66 @@ db = Database(const.OUT_DIR / "demo.db", echo=args.verbose)
 while True:
     with db.session() as sess:
         XTB = query.get_or_create_model(sess, model=XTB)
-        sess.add(XTB)
         HF3C = query.get_or_create_model(sess, model=HF3C)
-        sess.add(HF3C)
+        sess.add_all([XTB, HF3C])
 
         stmt = (
             select(GeometryRow)
-            .join(StationaryPointRow)
-            .join(CalculationRow)
-            .join(IdentityStationaryLink)  # Need to include the link
-            .join(IdentityRow)
+            # 1. Join StationaryPointRow (Explicit onclause keyword used)
+            .join(
+                target=StationaryPointRow,
+                onclause=(col(StationaryPointRow.geometry_id) == col(GeometryRow.id)),
+            )
+            # 2. Join CalculationRow
+            .join(
+                target=CalculationRow,
+                onclause=(
+                    col(CalculationRow.id) == col(StationaryPointRow.calculation_id)
+                ),
+            )
+            # 3. Join the Many-to-Many Link table
+            .join(
+                target=IdentityStationaryLink,
+                onclause=(
+                    col(IdentityStationaryLink.stationary_id)
+                    == col(StationaryPointRow.id)
+                ),
+            )
+            # 4. Join IdentityRow
+            .join(
+                target=IdentityRow,
+                onclause=(
+                    col(IdentityRow.id) == col(IdentityStationaryLink.identity_id)
+                ),
+            )
+            # 5. Apply all static filters cleanly in WHERE
             .where(
-                GeometryRow.id == StationaryPointRow.geometry_id,
-                CalculationRow.model_id == HF3C.id,
-                CalculationRow.calc_type == CalcType.OPT_TS,
-                IdentityRow.algorithm == RDKIT_INCHI,
-                IdentityRow.value == ts_inchi,
+                col(CalculationRow.model_id) == HF3C.id,
+                col(CalculationRow.calc_type) == CalcType.OPT_TS,
+                col(IdentityRow.algorithm) == "rdkit inchi",
+                col(IdentityRow.value).startswith("InChI=1S/C5H11O/"),
             )
         )
         # .one() will raise an Error if len(scan_trj) != 1
-        optts_geo: GeometryRow = sess.execute(stmt).one()[0]
+        optts_geo: GeometryRow = sess.scalars(stmt).one()
 
         # Query for existing IRC
         stmt = (
             select(CalculationRow)
-            .join(CalculationGeometryLink)
+            .join(
+                CalculationGeometryLink,
+                onclause=col(CalculationGeometryLink.calculation_id)
+                == col(CalculationRow.id),
+            )
             .where(
-                CalculationRow.model_id == HF3C.id,
-                CalculationRow.calc_type == CalcType.IRC,
-                CalculationGeometryLink.geometry_id == optts_geo.id,
-                CalculationGeometryLink.role == Role.INPUT,
+                col(CalculationRow.model_id) == HF3C.id,
+                col(CalculationRow.calc_type) == CalcType.IRC,
+                col(CalculationGeometryLink.geometry_id) == optts_geo.id,
+                col(CalculationGeometryLink.role) == Role.INPUT,
             )
         )
-        irc_calc = sess.execute(stmt).first()
+        irc_calc = sess.scalars(stmt).first()
         if irc_calc is not None:
-            irc_calc: CalculationRow = irc_calc[0]
             logger.info(
                 "Pre-existing IRC found (id = %s). Skipping calculation.",
                 irc_calc.id,
@@ -153,24 +172,36 @@ while True:
         # Add a ValidationRow to attach to the Step
         stmt = (
             select(StepRow)
-            .join(StageRow, StepRow.stage_id_ts == StageRow.id)  # ty: ignore[invalid-argument-type]
-            .join(StageStationaryLink, StageRow.id == StageStationaryLink.stage_id)  # ty: ignore[invalid-argument-type]
-            .join(StationaryPointRow)
-            .join(CalculationRow)
+            .join(
+                StageRow,
+                onclause=col(StageRow.id) == col(StepRow.stage_id_ts),
+            )
+            .join(
+                StageStationaryLink,
+                onclause=col(StageStationaryLink.stage_id) == col(StageRow.id),
+            )
+            .join(
+                StationaryPointRow,
+                onclause=col(StationaryPointRow.id)
+                == col(StageStationaryLink.stationary_id),
+            )
+            .join(
+                CalculationRow,
+                onclause=col(CalculationRow.id)
+                == col(StationaryPointRow.calculation_id),
+            )
             .where(
-                StageRow.is_ts == True,  # noqa: E712
-                StationaryPointRow.geometry_id == optts_geo.id,
-                CalculationRow.model_id == HF3C.id,
+                col(StageRow.is_ts),
+                col(StationaryPointRow.geometry_id) == optts_geo.id,
+                col(CalculationRow.model_id) == HF3C.id,
             )
         )
-        step_row = sess.execute(stmt).first()
+        step_row = sess.scalars(stmt).first()
         if step_row is None:
             msg = "Could not identify Reaction step from 4_NEB."
             raise LookupError(msg)
 
-        vld_row = ValidationRow(
-            calculation=irc_calc, step=step_row[0], method="Full IRC"
-        )
+        vld_row = ValidationRow(calculation=irc_calc, step=step_row, method="Full IRC")
         rows.append(vld_row)
 
         sess.add_all(rows)
@@ -209,21 +240,22 @@ with db.session() as sess:
             select(CalculationRow)
             .join(
                 CalculationGeometryLink,
-                CalculationRow.id == CalculationGeometryLink.calculation_id,  # ty: ignore[invalid-argument-type]
+                onclause=col(CalculationGeometryLink.calculation_id)
+                == col(CalculationRow.id),
             )
             .join(
                 GeometryRow,
-                GeometryRow.id == CalculationGeometryLink.geometry_id,  # ty: ignore[invalid-argument-type]
+                onclause=col(GeometryRow.id)
+                == col(CalculationGeometryLink.geometry_id),
             )
             .where(
-                CalculationRow.model_id == HF3C.id,
-                CalculationRow.calc_type == CalcType.OPT,
-                GeometryRow.id == min_geo.id,
+                col(CalculationRow.model_id) == HF3C.id,
+                col(CalculationRow.calc_type) == CalcType.OPT,
+                col(GeometryRow.id) == min_geo.id,
             )
         )
-        opt_calc = sess.execute(stmt).first()
+        opt_calc = sess.scalars(stmt).first()
         if opt_calc is not None:
-            opt_calc: CalculationRow = opt_calc[0]
             logger.info(
                 "Pre-existing OPT found (id = %s). Skipping calculation.",
                 opt_calc.id,
@@ -272,13 +304,17 @@ with db.session() as sess:
             stp_id_old = conf_ids.pop(conf_id)
             stmt = (
                 select(StationaryPointRow)
-                .join(CalculationRow, StationaryPointRow.id == CalculationRow.id)  # ty: ignore[invalid-argument-type]
+                .join(
+                    CalculationRow,
+                    onclause=col(CalculationRow.id)
+                    == col(StationaryPointRow.calculation_id),
+                )
                 .where(
-                    StationaryPointRow.geometry_id == stp_id_old,
-                    CalculationRow.model_id == HF3C.id,
+                    col(StationaryPointRow.id) == stp_id_old,
+                    col(CalculationRow.model_id) == HF3C.id,
                 )
             )
-            orig_stp: StationaryPointRow = sess.execute(stmt).one()[0]
+            orig_stp = sess.scalars(stmt).one()
             orig_stp.is_pseudo = False
             sess.flush([orig_stp])
 
@@ -296,18 +332,18 @@ with db.session() as sess:
         stmt = (
             select(StageStationaryLink)
             .join(
-                StepRow,
-                or_(
-                    StepRow.stage_id1 == StageStationaryLink.stage_id,  # ty: ignore[invalid-argument-type]
-                    StepRow.stage_id2 == StageStationaryLink.stage_id,  # ty: ignore[invalid-argument-type]
+                target=StepRow,
+                onclause=or_(
+                    col(StepRow.stage_id1) == col(StageStationaryLink.stage_id),
+                    col(StepRow.stage_id2) == col(StageStationaryLink.stage_id),
                 ),
             )
             .where(
-                StageStationaryLink.stationary_id == stp_id_old,
-                StepRow.id == step_row.id,
+                col(StageStationaryLink.stationary_id) == stp_id_old,
+                col(StepRow.id) == step_row.id,
             )
         )
-        ss_link: StageStationaryLink = sess.execute(stmt).one()[0]
+        ss_link: StageStationaryLink = sess.scalars(stmt).one()
         # Swap the new stationary id for the old one in the stage link
         ss_link.stationary_id = stp_id_new
         sess.flush([ss_link])

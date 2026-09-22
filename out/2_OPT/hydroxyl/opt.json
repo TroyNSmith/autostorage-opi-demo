@@ -1,0 +1,328 @@
+{
+  "ORCA Header": {
+    "Date": "2025-11-21 10:33:24 +0100",
+    "Git": "487d211c",
+    "Version": "6.1.1"
+  },
+  "Citations": [
+    {
+      "RN231": {
+        "author": [
+          "Neese,F."
+        ],
+        "title": "Software update: The ORCA program system—Version 5.0",
+        "journal": "WIRES Comput. Molec. Sci.",
+        "year": "2022",
+        "volume": "12",
+        "number": "1",
+        "pages": "e1606",
+        "doi": "10.1002/wcms.1606",
+        "type": "journal article"
+      }
+    },
+    {
+      "RN232": {
+        "author": [
+          "Neese,F."
+        ],
+        "title": "The SHARK Integral Generation and Digestion System",
+        "journal": "J. Comp. Chem.",
+        "year": "2022",
+        "volume": "44",
+        "number": "3",
+        "pages": "381",
+        "doi": "10.1002/jcc.26942",
+        "type": "journal article"
+      }
+    }
+  ],
+  "Molecule": {
+    "Atoms": [
+      {
+        "Basis": [
+          {
+            "Coefficients": [
+              0.06906002911277366,
+              0.39315916573919746,
+              0.665669280617882
+            ],
+            "Exponents": [
+              281.86658,
+              42.416,
+              9.09562
+            ],
+            "Shell": "s"
+          },
+          {
+            "Coefficients": [
+              -0.08081992972112224,
+              0.5820894938303396,
+              0.49715956768316166
+            ],
+            "Exponents": [
+              11.789326,
+              0.912894,
+              0.286661
+            ],
+            "Shell": "s"
+          },
+          {
+            "Coefficients": [
+              0.1242710025526831,
+              0.47659400978984195,
+              0.613044012592697
+            ],
+            "Exponents": [
+              8.27414,
+              1.715463,
+              0.383013
+            ],
+            "Shell": "p"
+          }
+        ],
+        "Coords": [
+          0.5025191278342773,
+          0.0,
+          0.0
+        ],
+        "ElementLabel": "O",
+        "ElementNumber": 8,
+        "Idx": 0,
+        "LoewdinCharge": -0.2096369206546882,
+        "LoewdinSpin": 1.052848708851557,
+        "MullikenCharge": -0.2828320840499501,
+        "MullikenSpin": 1.0665655204647393,
+        "NuclearCharge": 8.0
+      },
+      {
+        "Basis": [
+          {
+            "Coefficients": [
+              0.07045201243133531,
+              0.4078260719613602,
+              0.6477521142965751
+            ],
+            "Exponents": [
+              7.034063,
+              1.064756,
+              0.236559
+            ],
+            "Shell": "s"
+          }
+        ],
+        "Coords": [
+          -0.5025191278342773,
+          0.0,
+          0.0
+        ],
+        "ElementLabel": "H",
+        "ElementNumber": 1,
+        "Idx": 1,
+        "LoewdinCharge": 0.20963692065470063,
+        "LoewdinSpin": -0.0528487088515608,
+        "MullikenCharge": 0.28283208404995785,
+        "MullikenSpin": -0.06656552046474284,
+        "NuclearCharge": 1.0
+      }
+    ],
+    "BaseName": "opt",
+    "MolecularOrbitals": {
+      "EnergyUnit": "Eh",
+      "MOs": [
+        {
+          "MOCoefficients": [
+            0.9907834003779996,
+            0.04358243022393528,
+            1.5447196935212995e-16,
+            -0.006783208640799644,
+            -2.5411451367677564e-15,
+            -0.013072099017241023
+          ],
+          "Occupancy": 1.0,
+          "OrbitalEnergy": -20.368636069763667,
+          "OrbitalSymLabel": "A",
+          "OrbitalSymmetry": 0
+        },
+        {
+          "MOCoefficients": [
+            0.23523638454783527,
+            -0.9304359709581589,
+            2.6299609300316154e-18,
+            0.10810079967179657,
+            7.972378945514113e-16,
+            -0.1505097434102866
+          ],
+          "Occupancy": 1.0,
+          "OrbitalEnergy": -1.3330376910661288,
+          "OrbitalSymLabel": "A",
+          "OrbitalSymmetry": 0
+        },
+        {
+          "MOCoefficients": [
+            0.07386599177413161,
+            -0.398440492659144,
+            -7.568440536041005e-15,
+            -0.7442438827550965,
+            2.454646899890563e-14,
+            0.420558096902103
+          ],
+          "Occupancy": 1.0,
+          "OrbitalEnergy": -0.6066961022872941,
+          "OrbitalSymLabel": "A",
+          "OrbitalSymmetry": 0
+        },
+        {
+          "MOCoefficients": [
+            1.6170426414143324e-15,
+            -9.917065121666499e-15,
+            0.1587505648258825,
+            -1.9096138113959458e-14,
+            -0.9873187216737378,
+            1.0864119981077188e-14
+          ],
+          "Occupancy": 1.0,
+          "OrbitalEnergy": -0.5933708237028457,
+          "OrbitalSymLabel": "A",
+          "OrbitalSymmetry": 0
+        },
+        {
+          "MOCoefficients": [
+            -2.6000582215803513e-16,
+            1.367327755302812e-15,
+            -0.9873187216737369,
+            2.266812331659529e-15,
+            -0.15875056482588154,
+            -1.6712471752392657e-15
+          ],
+          "Occupancy": 1.0,
+          "OrbitalEnergy": -0.5099847106821767,
+          "OrbitalSymLabel": "A",
+          "OrbitalSymmetry": 0
+        },
+        {
+          "MOCoefficients": [
+            -0.08329469426324877,
+            0.5967028075863104,
+            9.453741132733867e-17,
+            -0.8495218378144103,
+            -3.027201399409464e-16,
+            -1.1888636013407565
+          ],
+          "Occupancy": 0.0,
+          "OrbitalEnergy": 0.5436149496009582,
+          "OrbitalSymLabel": "A",
+          "OrbitalSymmetry": 0
+        },
+        {
+          "MOCoefficients": [
+            -0.9913201541768475,
+            -0.041243698407443984,
+            -5.383280386234238e-17,
+            0.006478888150693166,
+            1.8275069778577667e-15,
+            0.012467532958798482
+          ],
+          "Occupancy": 1.0,
+          "OrbitalEnergy": -20.332009925711766,
+          "OrbitalSymLabel": "A",
+          "OrbitalSymmetry": 0
+        },
+        {
+          "MOCoefficients": [
+            0.22541470536506317,
+            -0.8820243161668183,
+            -3.0510011977281225e-16,
+            0.11071018424029594,
+            6.285423837990742e-16,
+            -0.22291355246054564
+          ],
+          "Occupancy": 1.0,
+          "OrbitalEnergy": -1.1771552258612812,
+          "OrbitalSymLabel": "A",
+          "OrbitalSymmetry": 0
+        },
+        {
+          "MOCoefficients": [
+            0.08862492301867562,
+            -0.4682895020760911,
+            -4.044370368495491e-15,
+            -0.7078126204936684,
+            8.716088889274028e-16,
+            0.45226752594595
+          ],
+          "Occupancy": 1.0,
+          "OrbitalEnergy": -0.5647948584251149,
+          "OrbitalSymLabel": "A",
+          "OrbitalSymmetry": 0
+        },
+        {
+          "MOCoefficients": [
+            -3.70242267251124e-16,
+            1.8660410086087015e-15,
+            -0.9873187216737391,
+            2.3113592045706217e-15,
+            -0.15875056482586905,
+            -1.8187769032091462e-15
+          ],
+          "Occupancy": 1.0,
+          "OrbitalEnergy": -0.46445661743841987,
+          "OrbitalSymLabel": "A",
+          "OrbitalSymmetry": 0
+        },
+        {
+          "MOCoefficients": [
+            -2.5621934433405635e-17,
+            9.306613394462644e-16,
+            -0.15875056482587,
+            -5.753580879405331e-18,
+            0.9873187216737395,
+            -2.1131418655581273e-15
+          ],
+          "Occupancy": 0.0,
+          "OrbitalEnergy": 0.23780130292936297,
+          "OrbitalSymLabel": "A",
+          "OrbitalSymmetry": 0
+        },
+        {
+          "MOCoefficients": [
+            -0.08944428131982722,
+            0.6192387232129314,
+            2.5084227002779037e-16,
+            -0.8797844498141573,
+            -1.4902600229343165e-15,
+            -1.165632031055706
+          ],
+          "Occupancy": 0.0,
+          "OrbitalEnergy": 0.574450817904104,
+          "OrbitalSymLabel": "A",
+          "OrbitalSymmetry": 0
+        }
+      ],
+      "OrbitalLabels": [
+        "0O   1s",
+        "0O   2s",
+        "0O   1pz",
+        "0O   1px",
+        "0O   1py",
+        "1H   1s",
+        "0O   1s",
+        "0O   2s",
+        "0O   1pz",
+        "0O   1px",
+        "0O   1py",
+        "1H   1s"
+      ]
+    },
+    "CoordinateUnits": "Angs",
+    "Multiplicity": 2,
+    "Charge": 0,
+    "HFTyp": "UHF",
+    "PointGroup": "C1",
+    "Origin": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "STEOM": null
+  }
+}

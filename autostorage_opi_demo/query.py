@@ -1,6 +1,6 @@
 """Query functions."""
 
-from automol import RDKIT_INCHI
+from automol import rdkit_inchi
 from autostorage import GeometryRow, IdentityRow, ModelRow
 from sqlalchemy.orm import Session as SASession
 from sqlmodel import Session as SMSession
@@ -30,7 +30,7 @@ def get_or_create_model(sess: SASession | SMSession, model: ModelRow) -> ModelRo
         ModelRow.keywords == model.keywords,
     )
 
-    existing = sess.execute(stmt).scalar_one_or_none()
+    existing = sess.scalars(stmt).one_or_none()
     if existing is not None:
         return existing
 
@@ -66,11 +66,10 @@ def calculation_by_inchi(
 
     if geo and not inchi:
         # Create a temporary GeometryRow to get the InChI
-        target_identity = IdentityRow.from_geometry(geo, algorithm=RDKIT_INCHI)
-        inchi = target_identity.value
+        inchi = rdkit_inchi.identity_fn(geo)
 
     identity_stmt = select(IdentityRow).where(
-        IdentityRow.algorithm == RDKIT_INCHI,
+        IdentityRow.algorithm == rdkit_inchi.name,
         IdentityRow.value == inchi,
     )
     identities = sess.execute(identity_stmt).all()

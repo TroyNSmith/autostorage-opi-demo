@@ -2,7 +2,6 @@
 
 from pathlib import Path
 
-from automol.ident import RDKIT_INCHI
 from autostorage import (
     CalculationGeometryLink,
     CalculationRow,
@@ -16,13 +15,14 @@ from autostorage import (
     StationaryPointRow,
 )
 from autostorage.models import IdentityStationaryLink
-from sqlmodel import select
+from sqlalchemy import and_
+from sqlmodel import select, col
 
 import const
 import ident  # noqa: F401 Ensures the custom identity is being added to registry
 import query
 import utils
-from const import HF3C, HYDROXYL, PENT2ENE, XTB, CalcInput, CalcType
+from const import HF3C, HYDROXYL, XTB, CalcInput, CalcType
 
 parser = utils.get_parser()
 args = parser.parse_args()
@@ -52,23 +52,25 @@ def optimize(
             select(CalculationRow)
             .join(
                 CalculationGeometryLink,
-                CalculationRow.id == CalculationGeometryLink.calculation_id,  # ty: ignore[invalid-argument-type]
+                onclause=col(CalculationGeometryLink.calculation_id)
+                == col(CalculationRow.id),
             )
-            .join(GeometryRow, GeometryRow.id == CalculationGeometryLink.geometry_id)  # ty: ignore[invalid-argument-type]
-            .join(IdentityStationaryLink)  # Need to include the link
-            .join(IdentityRow)
+            .join(
+                GeometryRow,
+                col(GeometryRow.id) == col(CalculationGeometryLink.geometry_id),
+            )
             .where(
-                CalculationRow.model_id == XTB.id,
-                CalculationRow.calc_type == CalcType.GOAT,
-                CalculationGeometryLink.role == Role.INPUT,
-                GeometryRow.id == geo.id,
+                col(CalculationRow.model_id) == XTB.id,
+                col(CalculationRow.calc_type) == CalcType.GOAT,
+                col(CalculationGeometryLink.role) == Role.INPUT,
+                col(GeometryRow.id) == geo.id,
             )
         )
-        opt_calc = sess.execute(stmt).first()
+        opt_calc = sess.scalars(stmt).first()
         if opt_calc is not None:
             logger.info(
                 "Pre-existing OPT found (id = %s). Skipping calculation.",
-                opt_calc[0].id,
+                opt_calc.id,
             )
             return next(
                 cgl.geometry
@@ -123,17 +125,49 @@ with db.session() as sess:
     # Query whether the goat calculation exists by checking if pent2ene's InChI is
     # tagged to a calculation with model=xtb_model and calc_type="goat". Then, fetch the
     # geometry with the lowest energy for further optimization
-    pent2ene_geo = utils.struc_to_geo(PENT2ENE)
-    goat_id = query.calculation_by_inchi(
-        sess, model=XTB, calc_type=CalcType.GOAT, geo=pent2ene_geo
+    stmt = (
+        select(CalculationRow)
+        .join(
+            target=StationaryPointRow,
+            onclause=col(CalculationRow.id) == col(StationaryPointRow.calculation_id),
+        )
+        .join(
+            target=IdentityStationaryLink,
+            onclause=StationaryPointRow.id == IdentityStationaryLink.stationary_id,  # ty: ignore[invalid-argument-type]
+        )
+        .join(
+            target=IdentityRow,
+            onclause=IdentityStationaryLink.identity_id == IdentityRow.id,  # ty: ignore[invalid-argument-type]
+        )
+        .where(
+            CalculationRow.model_id == XTB.id,
+            CalculationRow.calc_type == CalcType.GOAT,
+            col(StationaryPointRow.is_pseudo).is_(False),
+            IdentityRow.algorithm == "rdkit inchi",  # ty: ignore[invalid-argument-type]
+            IdentityRow.value == "InChI=1S/C5H10/c1-3-5-4-2/h3,5H,4H2,1-2H3/b5-3+",  # ty: ignore[invalid-argument-type]
+        )
     )
-    goat_row = utils.row_from_id(sess, CalculationRow, goat_id)
-    sess.merge(goat_row)
+    goat_calc: CalculationRow | None = sess.scalars(stmt).first()
+    if not goat_calc:
+        msg = "GOAT calculation not found in database."
+        raise LookupError(msg)
 
-    min_ene = min(goat_row.energies, key=lambda e: e.value)
-    pent2ene_min = utils.row_from_id(sess, GeometryRow, min_ene.geometry_id)
-    logger.info("Lowest energy conformer identified (id = %s)", min_ene.geometry_id)
+    goat_geos: list[GeometryRow] = [
+        cgl.geometry
+        for cgl in goat_calc.geometry_links
+        if cgl.role == Role.OUTPUT  # Filter by output geometries
+    ]
+    pent2ene_min: GeometryRow = min(
+        [
+            e
+            for g in goat_geos
+            for e in g.energies
+            if e.calculation.model_id == HF3C.id  # Filter by HF-3c energies
+        ],
+        key=lambda e: e.value,
+    ).geometry
 
+    logger.info("Lowest energy conformer identified (id = %s).", pent2ene_min.id)
     sess.close()
 
 # Optimize pent2ene

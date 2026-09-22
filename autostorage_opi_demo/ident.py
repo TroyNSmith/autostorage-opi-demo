@@ -1,39 +1,39 @@
 """iRMSD conformer identity algorithm."""
 
-from pathlib import Path
+import uuid
+from collections.abc import Mapping
 
+from automol import rdkit_inchi
 from automol.geom import Geometry
-from automol.ident import AlgorithmFns, AlgorithmRegistry, Identity, IdentityKind
-from irmsd import Molecule, read_structures, sorter_irmsd_molecule
-
-IRMSD_CONFORMER = "irmsd_conformer"
+from automol.ident import AlgorithmRegistry, IdentityKind
+from irmsd import Molecule, sorter_irmsd_molecule
 
 
-@AlgorithmRegistry.register(IRMSD_CONFORMER, IdentityKind.CONFORMER)
-class IrmsdConformerIdentity(AlgorithmFns):
-    """iRMSD conformer identity."""
+def irmsd_identity_fn(
+    geo: Geometry, other_geos: Mapping[str, Geometry] | None = None
+) -> str:
+    """iRMSD-based conformer grouping."""
+    if not other_geos:
+        return uuid.uuid4().hex
 
-    @staticmethod
-    def identity_fn(
-        geo: Geometry, other_geos: dict[str, Geometry] | None = None
-    ) -> str:
-        """Generate conformer identity from Geometry referencing other Geometries."""
-        if not hasattr(geo, "id"):
-            msg = "Geometry object must have an 'id' attribute for conformer identity."
-            raise ValueError(msg)
+    keys = list(other_geos.keys())
+    confs = [
+        Molecule(g.symbols, g.coordinates)
+        for g in [*list(other_geos.values() or []), geo]
+    ]
 
-        if not other_geos:
-            return str(geo.id)
+    groups, _ = sorter_irmsd_molecule(confs, rthr=0.125)
+    geo_group = groups[-1]
+    for key, group in zip(keys, groups[:-1], strict=True):
+        if group == geo_group:
+            return key
 
-        keys = list(other_geos.keys())
-        confs = [
-            Molecule(g.symbols, g.coordinates)
-            for g in [*list(other_geos.values() or []), geo]
-        ]
-        groups, _ = sorter_irmsd_molecule(confs, rthr=0.125)
-        geo_group = groups[-1]
-        for key, group in zip(keys, groups[:-1], strict=True):
-            if group == geo_group:
-                return key
+    return uuid.uuid4().hex
 
-        return str(geo.id)
+
+irmsd_confomer = AlgorithmRegistry.register(
+    name="irmsd_conformer",
+    kind=IdentityKind.CONFORMER,
+    identity_fn=irmsd_identity_fn,
+    parent_algorithm=rdkit_inchi,
+)

@@ -1,8 +1,9 @@
 """Global Optimization of Pent2ene with the xTB model."""
 
+from automol import rdkit_inchi
+
 import sys
 
-from automol.ident import RDKIT_INCHI
 from autostorage import (
     CalculationGeometryLink,
     CalculationRow,
@@ -11,10 +12,11 @@ from autostorage import (
     IdentityRow,
     Role,
     StationaryPointRow,
+    IdentityAlgorithmRow,
 )
 from autostorage.models import IdentityStationaryLink
 from opi.input.structures import Structure
-from sqlmodel import select
+from sqlmodel import select, col, text
 
 import const
 import ident  # noqa: F401 Ensures the custom identity is being added to registry
@@ -47,22 +49,35 @@ with db.session() as sess:
     # to a calculation with model_id==XTB.id and calc_type==CalcType.GOAT ("goat")
     stmt = (
         select(CalculationRow)
-        .join(StationaryPointRow)  # Identity is linked to the Stationary
-        .join(IdentityStationaryLink)  # Need to include the link
-        .join(IdentityRow)
+        .join(
+            StationaryPointRow,
+            onclause=col(StationaryPointRow.calculation_id) == col(CalculationRow.id),
+        )  # Identity is linked to the Stationary
+        .join(
+            IdentityStationaryLink,
+            onclause=col(IdentityStationaryLink.stationary_id)
+            == col(StationaryPointRow.id),
+        )  # Need to include the link
+        .join(
+            IdentityRow,
+            onclause=col(IdentityRow.id) == col(IdentityStationaryLink.identity_id),
+        )
+        .join(
+            IdentityAlgorithmRow,
+            onclause=col(IdentityAlgorithmRow.id) == col(IdentityRow.algorithm_id),
+        )
         .where(
-            CalculationRow.model_id == XTB.id,
-            CalculationRow.calc_type == CalcType.GOAT,
-            CalculationRow.id == StationaryPointRow.calculation_id,
-            IdentityRow.algorithm == RDKIT_INCHI,
-            IdentityRow.value == pent2ene_inchi,
+            col(CalculationRow.model_id) == XTB.id,
+            col(CalculationRow.calc_type) == CalcType.GOAT,
+            col(IdentityRow.value) == pent2ene_inchi,
+            col(IdentityAlgorithmRow.name) == rdkit_inchi.name,
         )
     )
-    goat_calc = sess.execute(stmt).first()
+    goat_calc = sess.scalars(stmt).first()
     if goat_calc is not None:
         logger.info(
             "Pre-existing GOAT calculation found (id = %s). Skipping calculation.",
-            goat_calc[0].id,
+            goat_calc.id,
         )
         sys.exit(0)
 
