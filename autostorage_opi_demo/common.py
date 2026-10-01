@@ -1,4 +1,4 @@
-"""Shared setup and autostorage recipes for the demo scripts."""
+"""Shared setup and autostorage recipes for the demo."""
 
 import argparse
 from pathlib import Path
@@ -28,11 +28,12 @@ HYDROXYL_SMILES = "[OH]"
 HYDROXYL_INCHI = "InChI=1S/HO/h1H"
 COMPLEX_FORMULA = "C5H11O"  # Hill formula of the pent-2-ene + OH complex
 
-_parser = argparse.ArgumentParser(description="Run an autostorage demo step.")
+_parser = argparse.ArgumentParser(description="Run the autostorage demo.")
 _parser.add_argument("-m", "--memory", type=int, default=8, help="Memory in GB.")
 _parser.add_argument("-n", "--ncores", type=int, default=1, help="CPU cores.")
 _parser.add_argument("-v", "--verbose", action="store_true", help="Echo SQL.")
-ARGS = _parser.parse_args()
+# Ignore unknown arguments, such as those a Jupyter kernel is launched with
+ARGS, _ = _parser.parse_known_args()
 orca.configure(memory=ARGS.memory, ncores=ARGS.ncores)
 
 

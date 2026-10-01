@@ -42,8 +42,4 @@ module load ORCA/6.1.1-gompi-2023b-avx2
 # exist from scratch; reuse the venv synced in the submit dir instead.
 export UV_NO_SYNC=1
 
-uv run python autostorage_opi_demo/1_GOAT.py -m "$MEMORY" -n "$NTASKS"
-uv run python autostorage_opi_demo/2_OPT.py -m "$MEMORY" -n "$NTASKS"
-uv run python autostorage_opi_demo/3_SCAN.py -m "$MEMORY" -n "$NTASKS"
-uv run python autostorage_opi_demo/4_NEB.py -m "$MEMORY" -n "$NTASKS"
-uv run python autostorage_opi_demo/5_IRC.py -m "$MEMORY" -n "$NTASKS"
+uv run python autostorage_opi_demo/demo.py -m "$MEMORY" -n "$NTASKS"
