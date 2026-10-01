@@ -5,17 +5,18 @@ import re
 import subprocess
 from pathlib import Path
 
-from automol.ident import Algorithm
+import autostorage.query
+from automol import rdkit_inchi
 from autostorage import (
     CalculationGeometryLink,
     CalculationRow,
-    EnergyRow,
     GeometryRow,
-    GradientRow,
-    IdentityRow,
     ModelRow,
+    PropertyValueRow,
     Role,
     StationaryPointRow,
+    energy_property_kind,
+    gradient_property_kind,
 )
 from opi.core import Calculator
 from opi.input.structures import Properties, Structure
@@ -123,28 +124,19 @@ def calculation_exists(
     -------
         Calculation.id or None
     """
-    # Create a temporary GeometryRow to get the InChI
-    target_identity = IdentityRow.from_geometry(geo, algorithm=Algorithm.RDKIT_INCHI)
-    target_inchi = target_identity.value
+    target_inchi = rdkit_inchi.identity_fn(geo)
 
     with sess:
-        identity_stmt = select(IdentityRow).where(
-            IdentityRow.algorithm == Algorithm.RDKIT_INCHI,
-            IdentityRow.value == target_inchi,
+        stmt = autostorage.query.stationary_point_by_identity(
+            rdkit_inchi, target_inchi, include_pseudo=True
         )
-        identities = sess.execute(identity_stmt).all()
-        for (ident,) in identities:
-            if not ident.stationary_points:
-                continue
-
-            for stp in ident.stationary_points:
-                sess.merge(stp)
-                if (
-                    stp.calculation
-                    and stp.calculation.model_id == model.id
-                    and stp.calculation.calc_type == calc_type
-                ):
-                    return stp.calculation.id
+        for stp in sess.scalars(stmt):
+            if (
+                stp.calculation
+                and stp.calculation.model_id == model.id
+                and stp.calculation.calc_type == calc_type
+            ):
+                return stp.calculation.id
 
     return None
 
@@ -220,8 +212,11 @@ def goat(geo: GeometryRow, work_dir: str | Path, model: ModelRow) -> list[SQLMod
         cg_link = CalculationGeometryLink(
             calculation=calc_row, geometry=geo_row, role=Role.OUTPUT
         )
-        ene_row = EnergyRow(
-            calculation=calc_row, geometry=geo_row, value=prop.energy_total
+        ene_row = PropertyValueRow(
+            property_kind_name=energy_property_kind.name,
+            calculation=calc_row,
+            geometry=geo_row,
+            value=prop.energy_total,
         )
         stp_row = StationaryPointRow(calculation=calc_row, geometry=geo_row, order=0)
         out_rows.extend([geo_row, cg_link, ene_row, stp_row])
@@ -253,8 +248,18 @@ def optimization(
     cg_link = CalculationGeometryLink(
         calculation=calc_row, geometry=geo_row, role=Role.OUTPUT
     )
-    ene_row = EnergyRow(calculation=calc_row, geometry=geo_row, value=ene)
-    grad_row = GradientRow(calculation=calc_row, geometry=geo_row, value=grad)
+    ene_row = PropertyValueRow(
+        property_kind_name=energy_property_kind.name,
+        calculation=calc_row,
+        geometry=geo_row,
+        value=ene,
+    )
+    grad_row = PropertyValueRow(
+        property_kind_name=gradient_property_kind.name,
+        calculation=calc_row,
+        geometry=geo_row,
+        value=grad,
+    )
     stp_row = StationaryPointRow(calculation=calc_row, geometry=geo_row, order=0)
 
     return [geo_row, cg_link, ene_row, grad_row, stp_row]

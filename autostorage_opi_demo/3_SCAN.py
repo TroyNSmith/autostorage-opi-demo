@@ -1,34 +1,35 @@
 """Optimization of hydroxyl radical and lowest-energy pent2ene conformer."""
 
-from ase.md.velocitydistribution import Stationary
-
-from sqlmodel import select, col
+from sqlmodel.sql.expression import SelectOfScalar
 
 import sys
 
+from automol import hill_formula
 from autostorage import (
     CalculationGeometryLink,
     CalculationRow,
     CalculationTrajectoryLink,
     Database,
-    EnergyRow,
-    GeometryTrajectoryLink,
-    Role,
-    TrajectoryRow,
-    StationaryPointRow,
-    IdentityStationaryLink,
-    IdentityRow,
-    IdentityAlgorithmRow,
     GeometryRow,
+    GeometryTrajectoryLink,
+    IdentityAlgorithmRow,
+    IdentityRow,
+    IdentityStationaryLink,
     ModelRow,
+    PropertyValueRow,
+    Role,
+    StationaryPointRow,
+    TrajectoryRow,
+    energy_property_kind,
 )
 from opi.input.blocks import BlockGeom, Constraint, Constraints
+from sqlmodel import col, select
 
 import const
 import ident  # noqa: F401 Ensures the custom identity is being added to registry
 import query
 import utils
-from const import HF3C, HYDROXYL, PENT2ENE, XTB, CalcInput, CalcType
+from const import HF3C, XTB, CalcInput, CalcType
 
 parser = utils.get_parser()
 args = parser.parse_args()
@@ -120,8 +121,8 @@ with db.session() as sess:
             col(CalculationRow.model_id) == XTB.id,
             col(CalculationRow.calc_type) == CalcType.OPT,
             col(StationaryPointRow.is_pseudo).is_(False),
-            col(IdentityRow.value).startswith("InChI=1S/C5H11O/"),
-            col(IdentityAlgorithmRow.name) == "rdkit inchi",
+            col(IdentityRow.value) == "C5H11O",
+            col(IdentityAlgorithmRow.name) == hill_formula.name,
         )
     )
     scan_calc: CalculationRow | None = sess.scalars(stmt).one_or_none()
@@ -162,8 +163,8 @@ with db.session() as sess:
         msg = "Structure could not be determined from constrained OPT output."
         raise ValueError
 
-    const_geo = utils.struc_to_geo(const_struc)
-    const_geo.spin = complex_geo.spin  # Make sure spin is properly recorded
+    # Make sure spin is properly recorded
+    const_geo = utils.struc_to_geo(const_struc, spin=complex_geo.spin)
 
     cgl_in = CalculationGeometryLink(
         calculation=const_calc, geometry=complex_geo, role=Role.INPUT
@@ -203,8 +204,8 @@ with db.session() as sess:
     strucs, _ = utils.parse_trj(SCAN_DIR / "scan", file_pattern="*.allxyz")
     for i, const_struc in enumerate(strucs):
         logger.info("Beginning ENERGY %s", i)
-        geo_row = utils.struc_to_geo(const_struc)
-        geo_row.spin = complex_geo.spin  # Make sure spin is properly recorded
+        # Make sure spin is properly recorded
+        geo_row = utils.struc_to_geo(const_struc, spin=complex_geo.spin)
 
         gt_link = GeometryTrajectoryLink(
             trajectory=trj_row, geometry=geo_row, index=[i]
@@ -226,7 +227,12 @@ with db.session() as sess:
         if ene is None:
             msg = f"Energy not determined for scan point {i}"
             raise ValueError(msg)
-        ene_row = EnergyRow(calculation=ene_calc, geometry=geo_row, value=ene)
+        ene_row = PropertyValueRow(
+            property_kind_name=energy_property_kind.name,
+            calculation=ene_calc,
+            geometry=geo_row,
+            value=ene,
+        )
         rows.extend([ene_calc, cgl_in, ene_row])
 
     sess.add_all(rows)

@@ -7,15 +7,16 @@ from autostorage import (
     CalculationGeometryLink,
     CalculationRow,
     Database,
-    EnergyRow,
     IdentityAlgorithmRow,
     IdentityRow,
+    PropertyValueRow,
     Role,
     StationaryPointRow,
+    energy_property_kind,
 )
 from autostorage.models import IdentityStationaryLink
 from opi.input.structures import Structure
-from sqlmodel import col, select, text
+from sqlmodel import col, select
 
 import const
 import ident  # noqa: F401 Ensures the custom identity is being added to registry
@@ -125,7 +126,12 @@ with db.session() as sess:
             msg = f"Energy not determined for conformer {i}."
             raise ValueError(msg)
 
-        ene_row = EnergyRow(calculation=ene_calc, geometry=geo_row, value=ene)
+        ene_row = PropertyValueRow(
+            property_kind_name=energy_property_kind.name,
+            calculation=ene_calc,
+            geometry=geo_row,
+            value=ene,
+        )
         rows.extend([ene_calc, cgl_in, ene_row])
 
     sess.add_all(rows)

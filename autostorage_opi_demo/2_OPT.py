@@ -6,14 +6,15 @@ from autostorage import (
     CalculationGeometryLink,
     CalculationRow,
     Database,
-    EnergyRow,
     GeometryRow,
-    GradientRow,
+    IdentityAlgorithmRow,
     IdentityRow,
     ModelRow,
+    PropertyValueRow,
     Role,
     StationaryPointRow,
-    IdentityAlgorithmRow,
+    energy_property_kind,
+    gradient_property_kind,
 )
 from autostorage.models import IdentityStationaryLink
 from opi.input.structures import Structure
@@ -104,9 +105,19 @@ def optimize(
             msg = "Optimization output did not parse expected results."
             raise ValueError(msg)
 
-        opt_geo = utils.struc_to_geo(struc)
-        opt_ene = EnergyRow(calculation=opt_calc, geometry=opt_geo, value=ene)
-        opt_gra = GradientRow(calculation=opt_calc, geometry=opt_geo, value=grad)
+        opt_geo = utils.struc_to_geo(struc, spin=geo.spin)
+        opt_ene = PropertyValueRow(
+            property_kind_name=energy_property_kind.name,
+            calculation=opt_calc,
+            geometry=opt_geo,
+            value=ene,
+        )
+        opt_gra = PropertyValueRow(
+            property_kind_name=gradient_property_kind.name,
+            calculation=opt_calc,
+            geometry=opt_geo,
+            value=grad,
+        )
         opt_stp = StationaryPointRow(calculation=opt_calc, geometry=opt_geo, order=0)
         cgl_out = CalculationGeometryLink(
             calculation=opt_calc, geometry=opt_geo, role=Role.OUTPUT
@@ -169,10 +180,10 @@ with db.session() as sess:
         [
             e
             for g in goat_geos
-            for e in g.energies
-            if e.calculation.model_id == HF3C.id  # Filter by HF-3c energies
+            # Filter by HF-3c energies
+            for e in utils.get_properties(g, energy_property_kind, HF3C)
         ],
-        key=lambda e: e.value,
+        key=lambda e: float(e.value),
     ).geometry
 
     logger.info("Lowest energy conformer identified (id = %s).", pent2ene_min.id)

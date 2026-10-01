@@ -7,14 +7,15 @@ from autostorage import (
     CalculationRow,
     CalculationTrajectoryLink,
     Database,
-    EnergyRow,
     GeometryRow,
-    HessianRow,
+    PropertyValueRow,
     Role,
     StageRow,
     StationaryPointRow,
     StepRow,
     TrajectoryRow,
+    energy_property_kind,
+    hessian_property_kind,
 )
 from orca_parser import HessianTools
 from sqlmodel import select
@@ -58,16 +59,16 @@ with db.session() as sess:
         )
     )
     # .one() will raise an Error if len(scan_trj) != 1
-    scan_trj: TrajectoryRow = sess.execute(stmt).one()[0]
+    scan_trj: TrajectoryRow = sess.exec(stmt).one()
     scan_calc = scan_trj.calculation_links[0].calculation  # There should only be one
     geo_rows = [gtl.geometry for gtl in scan_trj.geometry_links]
     ene_rows = [
-        e for g in geo_rows for e in g.energies if e.calculation.model_id == HF3C.id
+        e for g in geo_rows for e in utils.get_properties(g, energy_property_kind, HF3C)
     ]
 
     geo1: GeometryRow = min(scan_trj.geometry_links, key=lambda gtl: gtl.index).geometry
     geo2: GeometryRow = max(scan_trj.geometry_links, key=lambda gtl: gtl.index).geometry
-    geo_ts: GeometryRow = max(ene_rows, key=lambda e: e.value).geometry
+    geo_ts: GeometryRow = max(ene_rows, key=lambda e: float(e.value)).geometry
 
     if geo_ts.id in {geo1.id, geo2.id}:
         msg = "Highest point in energy scan is the first or last point."
@@ -83,11 +84,11 @@ with db.session() as sess:
             CalculationGeometryLink.role == Role.INPUT,
         )
     )
-    optts_calc = sess.execute(stmt).first()
+    optts_calc = sess.exec(stmt).first()
     if optts_calc is not None:
         logger.info(
             "Pre-existing OPTTS found (id = %s). Skipping calculation.",
-            optts_calc[0].id,
+            optts_calc.id,
         )
         sys.exit(0)
 
@@ -105,8 +106,8 @@ with db.session() as sess:
         msg = "Structure could not be determined from constrained OPT."
         raise ValueError
 
-    optts_geo = utils.struc_to_geo(optts_struc)
-    optts_geo.spin = geo_ts.spin  # Make sure spin is properly recorded
+    # Make sure spin is properly recorded
+    optts_geo = utils.struc_to_geo(optts_struc, spin=geo_ts.spin)
 
     cg_link_in = CalculationGeometryLink(
         calculation=optts_calc, geometry=geo_ts, role=Role.INPUT
@@ -167,8 +168,18 @@ with db.session() as sess:
         msg = "Zero point energy not determined."
         raise ValueError(msg)
 
-    hess_row = HessianRow(calculation=freq_calc, geometry=optts_geo, value=modes)
-    zpe_row = EnergyRow(calculation=freq_calc, geometry=optts_geo, value=zpe)
+    hess_row = PropertyValueRow(
+        property_kind_name=hessian_property_kind.name,
+        calculation=freq_calc,
+        geometry=optts_geo,
+        value=modes,
+    )
+    zpe_row = PropertyValueRow(
+        property_kind_name=energy_property_kind.name,
+        calculation=freq_calc,
+        geometry=optts_geo,
+        value=zpe,
+    )
     rows.extend([freq_calc, cg_link_in, hess_row, zpe_row])
 
     # 3. Single point energy
@@ -188,7 +199,12 @@ with db.session() as sess:
         msg = "Single point energy not determined."
         raise ValueError(msg)
 
-    ene_row = EnergyRow(calculation=ene_calc, geometry=optts_geo, value=ene)
+    ene_row = PropertyValueRow(
+        property_kind_name=energy_property_kind.name,
+        calculation=ene_calc,
+        geometry=optts_geo,
+        value=ene,
+    )
     rows.extend([cg_link_in, ene_row])
 
     sess.add_all(rows)

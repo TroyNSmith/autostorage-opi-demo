@@ -1,7 +1,8 @@
 """Query functions."""
 
+import autostorage.query
 from automol import rdkit_inchi
-from autostorage import GeometryRow, IdentityRow, ModelRow
+from autostorage import GeometryRow, ModelRow
 from sqlalchemy.orm import Session as SASession
 from sqlmodel import Session as SMSession
 from sqlmodel import select
@@ -65,25 +66,20 @@ def calculation_by_inchi(
         raise ValueError(msg)
 
     if geo and not inchi:
-        # Create a temporary GeometryRow to get the InChI
         inchi = rdkit_inchi.identity_fn(geo)
+    if inchi is None:
+        msg = "InChI could not be determined."
+        raise ValueError(msg)
 
-    identity_stmt = select(IdentityRow).where(
-        IdentityRow.algorithm == rdkit_inchi.name,
-        IdentityRow.value == inchi,
+    stmt = autostorage.query.stationary_point_by_identity(
+        rdkit_inchi, inchi, include_pseudo=True
     )
-    identities = sess.execute(identity_stmt).all()
-    for (ident,) in identities:
-        if not ident.stationary_points:
-            continue
-
-        for stp in ident.stationary_points:
-            sess.merge(stp)
-            if (
-                stp.calculation
-                and stp.calculation.model_id == model.id
-                and stp.calculation.calc_type == calc_type
-            ):
-                return stp.calculation.id
+    for stp in sess.scalars(stmt):
+        if (
+            stp.calculation
+            and stp.calculation.model_id == model.id
+            and stp.calculation.calc_type == calc_type
+        ):
+            return stp.calculation.id
 
     return None

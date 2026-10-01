@@ -1,23 +1,25 @@
 """Intrinsic Reaction Coordinate validation."""
 
+from automol import hill_formula
 from autostorage import (
     CalculationGeometryLink,
     CalculationRow,
     CalculationTrajectoryLink,
     Database,
-    EnergyRow,
     GeometryRow,
     GeometryTrajectoryLink,
-    GradientRow,
-    HessianRow,
     IdentityAlgorithmRow,
     IdentityRow,
+    PropertyValueRow,
     Role,
     StageRow,
     StationaryPointRow,
     StepRow,
     TrajectoryRow,
     ValidationRow,
+    energy_property_kind,
+    gradient_property_kind,
+    hessian_property_kind,
 )
 from autostorage.models import IdentityStationaryLink, StageStationaryLink
 from opi.input.structures import Properties, Structure
@@ -80,8 +82,8 @@ while True:
             .where(
                 col(CalculationRow.model_id) == HF3C.id,
                 col(CalculationRow.calc_type) == CalcType.OPT_TS,
-                col(IdentityRow.value).startswith("InChI=1S/C5H11O/"),
-                col(IdentityAlgorithmRow.name) == "rdkit inchi",
+                col(IdentityRow.value) == "C5H11O",
+                col(IdentityAlgorithmRow.name) == hill_formula.name,
             )
         )
         # .one() will raise an Error if len(scan_trj) != 1
@@ -137,13 +139,15 @@ while True:
             if prop.energy_total is None:
                 msg = f"Energy not determined for IRC_B {i}."
                 raise ValueError(msg)
-            geo_row = utils.struc_to_geo(struc)
-            geo_row.spin = optts_geo.spin
+            geo_row = utils.struc_to_geo(struc, spin=optts_geo.spin)
             ct_link = GeometryTrajectoryLink(
                 geometry=geo_row, trajectory=trj_row_b, index=[i]
             )
-            ene_row = EnergyRow(
-                calculation=irc_calc, geometry=geo_row, value=prop.energy_total
+            ene_row = PropertyValueRow(
+                property_kind_name=energy_property_kind.name,
+                calculation=irc_calc,
+                geometry=geo_row,
+                value=prop.energy_total,
             )
             rows.extend([geo_row, ct_link, ene_row])
 
@@ -159,13 +163,15 @@ while True:
             if prop.energy_total is None:
                 msg = f"Energy not determined for IRC_F {i}."
                 raise ValueError(msg)
-            geo_row = utils.struc_to_geo(struc)
-            geo_row.spin = optts_geo.spin
+            geo_row = utils.struc_to_geo(struc, spin=optts_geo.spin)
             ct_link = GeometryTrajectoryLink(
                 geometry=geo_row, trajectory=trj_row_f, index=[i]
             )
-            ene_row = EnergyRow(
-                calculation=irc_calc, geometry=geo_row, value=prop.energy_total
+            ene_row = PropertyValueRow(
+                property_kind_name=energy_property_kind.name,
+                calculation=irc_calc,
+                geometry=geo_row,
+                value=prop.energy_total,
             )
             rows.extend([geo_row, ct_link, ene_row])
 
@@ -210,11 +216,8 @@ while True:
 
 # 2. Optimize backwards minima
 with db.session() as sess:
-    if HF3C.id:
-        HF3C = sess.merge(HF3C)
-    else:
-        HF3C = query.get_or_create_model(sess, model=HF3C)
-        sess.add(HF3C)
+    # Re-attach rows expired by the commit above
+    HF3C = sess.merge(HF3C)
 
     # Merge relevant rows from IRC
     irc_calc = sess.merge(irc_calc)
@@ -232,8 +235,12 @@ with db.session() as sess:
     for i, trj in enumerate([ctl.trajectory for ctl in irc_calc.trajectory_links]):
         geos = [gtl.geometry for gtl in trj.geometry_links]
         min_ene = min(
-            [e for g in geos for e in g.energies if e.calculation.model_id == HF3C.id],
-            key=lambda e: e.value,
+            [
+                e
+                for g in geos
+                for e in utils.get_properties(g, energy_property_kind, HF3C)
+            ],
+            key=lambda e: float(e.value),
         )
         min_geo = min_ene.geometry
 
@@ -286,9 +293,19 @@ with db.session() as sess:
             msg = "Optimization output did not return expected results."
             raise ValueError(msg)
 
-        opt_geo = utils.struc_to_geo(struc)
-        opt_ene = EnergyRow(calculation=opt_calc, geometry=opt_geo, value=ene)
-        opt_gra = GradientRow(calculation=opt_calc, geometry=opt_geo, value=grad)
+        opt_geo = utils.struc_to_geo(struc, spin=min_geo.spin)
+        opt_ene = PropertyValueRow(
+            property_kind_name=energy_property_kind.name,
+            calculation=opt_calc,
+            geometry=opt_geo,
+            value=ene,
+        )
+        opt_gra = PropertyValueRow(
+            property_kind_name=gradient_property_kind.name,
+            calculation=opt_calc,
+            geometry=opt_geo,
+            value=grad,
+        )
         opt_stp = StationaryPointRow(calculation=opt_calc, geometry=opt_geo, order=0)
 
         cg_link_out = CalculationGeometryLink(
@@ -386,8 +403,18 @@ with db.session() as sess:
             msg = "Zero point energy not determined."
             raise ValueError(msg)
 
-        hess_row = HessianRow(calculation=freq_calc, geometry=geo, value=modes)
-        zpe_row = EnergyRow(calculation=freq_calc, geometry=geo, value=zpe)
+        hess_row = PropertyValueRow(
+            property_kind_name=hessian_property_kind.name,
+            calculation=freq_calc,
+            geometry=geo,
+            value=modes,
+        )
+        zpe_row = PropertyValueRow(
+            property_kind_name=energy_property_kind.name,
+            calculation=freq_calc,
+            geometry=geo,
+            value=zpe,
+        )
         rows.extend([freq_calc, cg_link_in, hess_row, zpe_row])
 
     sess.add_all(rows)

@@ -5,10 +5,9 @@ description = "autostorage v0.0.15 + OPI demo."
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
 dependencies = [
-    "automol==0.0.25",
-    "autostorage==0.0.17",
-    # "automol",
-    # "autostorage",
+    # "autostorage==0.0.17",
+    "automol==0.0.26",
+    "autostorage",  # TEMP: local version (see [tool.uv.sources])
     "irmsd>=0.1.1",
     "orca-parser>=0.2.8",
     "orca-pi==2.0.0",
@@ -38,5 +37,5 @@ ignore = [
 convention = "google"
 
 [tool.uv.sources]
-# autostorage = { path = "../autostorage", editable = true }
+autostorage = { path = "../autostorage", editable = true }  # TEMP
 # automol = { path = "../automol", editable = true }

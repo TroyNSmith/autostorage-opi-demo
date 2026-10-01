@@ -8,7 +8,14 @@ from pathlib import Path
 from uuid import UUID
 
 import numpy as np
-from autostorage import CalculationRow, GeometryRow, ModelRow, Role
+from autostorage import (
+    CalculationRow,
+    GeometryRow,
+    ModelRow,
+    PropertyKind,
+    PropertyValueRow,
+    Role,
+)
 from opi.core import Calculator
 from opi.input.structures import Properties, Structure
 from opi.output.core import Output
@@ -62,10 +69,18 @@ def get_logger(name: str) -> logging.Logger:
     return logger
 
 
-def struc_to_geo(struc: Structure) -> GeometryRow:
-    """Convert an OPI Structure to an AutoStorage Geometry."""
+def struc_to_geo(struc: Structure, *, spin: int | None = None) -> GeometryRow:
+    """Convert an OPI Structure to an AutoStorage Geometry.
+
+    Args:
+        struc: OPI Structure.
+        spin: Number of unpaired electrons, overriding the Structure's multiplicity
+            (which is not always recovered when parsing ORCA output).
+    """
+    if spin is None:
+        spin = struc.multiplicity - 1
     return GeometryRow.from_xyz_block(
-        struc.to_xyz_block(), charge=struc.charge, spin=struc.multiplicity - 1
+        struc.to_xyz_block(), charge=struc.charge, spin=spin
     )
 
 
@@ -190,6 +205,18 @@ def get_output_geometry(calc: CalculationRow) -> GeometryRow:
         msg = f"{len(geo_out)} output geometries for {calc.id = }, expected 1."
         raise ValueError(msg)
     return geo_out[0]
+
+
+def get_properties(
+    geo: GeometryRow, kind: PropertyKind, model: ModelRow | None = None
+) -> list[PropertyValueRow]:
+    """Get a Geometry's property values of a given kind, optionally by model."""
+    return [
+        p
+        for p in geo.properties
+        if p.property_kind_name == kind.name
+        and (model is None or p.calculation.model_id == model.id)
+    ]
 
 
 def _rotation_aligning(a: np.ndarray, b: np.ndarray) -> np.ndarray:
