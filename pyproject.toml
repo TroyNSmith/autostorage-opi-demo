@@ -1,7 +1,7 @@
 [project]
 name = "autostorage-opi-demo"
 version = "0.1.0"
-description = "autostorage v0.0.15 + OPI demo."
+description = "Demonstration of autostorage with ORCA (via OPI)."
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
 dependencies = [
@@ -9,7 +9,6 @@ dependencies = [
     "automol==0.0.26",
     "autostorage",  # TEMP: local version (see [tool.uv.sources])
     "irmsd>=0.1.1",
-    "orca-parser>=0.2.8",
     "orca-pi==2.0.0",
 ]
 

@@ -1,422 +1,91 @@
-"""Intrinsic Reaction Coordinate validation."""
+"""Step 5: Validate the reaction step with an IRC and refine its endpoints.
+
+autostorage features: validations attached to reaction steps, shared identity
+rows (including the custom iRMSD conformer identity), and updating the reaction
+network.
+"""
+
+import sys
 
 from automol import hill_formula
 from autostorage import (
-    CalculationGeometryLink,
-    CalculationRow,
     CalculationTrajectoryLink,
     Database,
-    GeometryRow,
     GeometryTrajectoryLink,
-    IdentityAlgorithmRow,
-    IdentityRow,
     PropertyValueRow,
     Role,
-    StageRow,
     StationaryPointRow,
-    StepRow,
     TrajectoryRow,
     ValidationRow,
-    energy_property_kind,
-    gradient_property_kind,
-    hessian_property_kind,
+    query,
 )
-from autostorage.models import IdentityStationaryLink, StageStationaryLink
-from opi.input.structures import Properties, Structure
-from orca_parser import HessianTools
-from sqlalchemy import or_
-from sqlmodel import col, select
 
-import const
-import ident  # noqa: F401 Ensures the custom identity is being added to registry
-import query
-import utils
-from const import HF3C, XTB, CalcInput, CalcType
+import common
+import orca
 
-parser = utils.get_parser()
-args = parser.parse_args()
-logger = utils.get_logger(__name__)
+WORK_DIR = common.OUT_DIR / "5_IRC"
 
-# Build the working directory
-IRC_DIR = const.OUT_DIR / "5_IRC"
-IRC_DIR.mkdir(exist_ok=True, parents=True)
+with Database(common.DB_PATH, echo=common.ARGS.verbose) as db, db.session() as sess:
+    stmt = query.stationary_point_by_identity(hill_formula, common.COMPLEX_FORMULA)
+    ts = next(stp for stp in sess.exec(stmt) if stp.order == 1)
+    step = ts.stages[0].steps[0]
+    if step.validations:
+        print("The reaction step is already validated.")
+        sys.exit()
 
-# Initialize the database
-db = Database(const.OUT_DIR / "demo.db", echo=args.verbose)
+    hf3c = common.get_or_create_model(sess, "HF-3c")
 
-while True:
-    with db.session() as sess:
-        XTB = query.get_or_create_model(sess, model=XTB)
-        HF3C = query.get_or_create_model(sess, model=HF3C)
-        sess.add_all([XTB, HF3C])
+    irc = orca.run(ts.geometry, hf3c, "IRC", WORK_DIR / "irc")
+    sess.add(ValidationRow(calculation=irc.calculation, step=step, method="irc"))
 
-        stmt = (
-            select(GeometryRow)
-            .join(
-                target=StationaryPointRow,
-                onclause=(col(StationaryPointRow.geometry_id) == col(GeometryRow.id)),
-            )
-            .join(
-                target=CalculationRow,
-                onclause=(
-                    col(CalculationRow.id) == col(StationaryPointRow.calculation_id)
-                ),
-            )
-            .join(
-                target=IdentityStationaryLink,
-                onclause=(
-                    col(IdentityStationaryLink.stationary_id)
-                    == col(StationaryPointRow.id)
-                ),
-            )
-            .join(
-                target=IdentityRow,
-                onclause=(
-                    col(IdentityRow.id) == col(IdentityStationaryLink.identity_id)
-                ),
-            )
-            .join(
-                target=IdentityAlgorithmRow,
-                onclause=col(IdentityAlgorithmRow.id) == col(IdentityRow.algorithm_id),
-            )
-            .where(
-                col(CalculationRow.model_id) == HF3C.id,
-                col(CalculationRow.calc_type) == CalcType.OPT_TS,
-                col(IdentityRow.value) == "C5H11O",
-                col(IdentityAlgorithmRow.name) == hill_formula.name,
-            )
+    minima: list[StationaryPointRow] = []
+    for i, direction in enumerate("BF"):
+        # Store each IRC branch as a trajectory with its energies
+        trajectory = TrajectoryRow()
+        irc.calculation.trajectory_links.append(
+            CalculationTrajectoryLink(trajectory=trajectory, role=Role.OUTPUT)
         )
-        # .one() will raise an Error if len(scan_trj) != 1
-        optts_geo: GeometryRow = sess.scalars(stmt).one()
-
-        # Query for existing IRC
-        stmt = (
-            select(CalculationRow)
-            .join(
-                CalculationGeometryLink,
-                onclause=col(CalculationGeometryLink.calculation_id)
-                == col(CalculationRow.id),
+        frames = irc.frames(f"IRC_IRC_{direction}_trj.xyz")
+        for j, (geo, energy) in enumerate(frames):
+            trajectory.geometry_links.append(
+                GeometryTrajectoryLink(geometry=geo, index=[j])
             )
-            .where(
-                col(CalculationRow.model_id) == HF3C.id,
-                col(CalculationRow.calc_type) == CalcType.IRC,
-                col(CalculationGeometryLink.geometry_id) == optts_geo.id,
-                col(CalculationGeometryLink.role) == Role.INPUT,
-            )
-        )
-        irc_calc = sess.scalars(stmt).first()
-        if irc_calc is not None:
-            logger.info(
-                "Pre-existing IRC found (id = %s). Skipping calculation.",
-                irc_calc.id,
-            )
-            sess.close()
-            break
-
-        # 1. IRC
-        logger.info("Beginning IRC.")
-        irc_calc, _, irc_output = utils.run_calculation(
-            struc=optts_geo,
-            work_dir=IRC_DIR / "irc",
-            model=HF3C,
-            calc_type=CalcType.IRC,
-            calc_input=CalcInput(memory=args.memory, ncores=args.ncores),
-        )
-        cg_link = CalculationGeometryLink(
-            calculation=irc_calc, geometry=optts_geo, role=Role.INPUT
-        )
-        rows = [irc_calc, cg_link]
-
-        # Parse the backwards trajectory
-        trj_row_b = TrajectoryRow()
-        ct_link = CalculationTrajectoryLink(
-            calculation=irc_calc, trajectory=trj_row_b, role=Role.OUTPUT
-        )
-        rows.extend([trj_row_b, ct_link])
-        strucs_b = Structure.from_trj_xyz(IRC_DIR / "irc/IRC_IRC_B_trj.xyz")
-        props_b = Properties.from_trj_xyz(IRC_DIR / "irc/IRC_IRC_B_trj.xyz")
-        for i, (struc, prop) in enumerate(zip(strucs_b, props_b, strict=True)):
-            if prop.energy_total is None:
-                msg = f"Energy not determined for IRC_B {i}."
-                raise ValueError(msg)
-            geo_row = utils.struc_to_geo(struc, spin=optts_geo.spin)
-            ct_link = GeometryTrajectoryLink(
-                geometry=geo_row, trajectory=trj_row_b, index=[i]
-            )
-            ene_row = PropertyValueRow(
-                property_kind_name=energy_property_kind.name,
-                calculation=irc_calc,
-                geometry=geo_row,
-                value=prop.energy_total,
-            )
-            rows.extend([geo_row, ct_link, ene_row])
-
-        # Parse the forwards trajectory
-        trj_row_f = TrajectoryRow()
-        ct_link = CalculationTrajectoryLink(
-            calculation=irc_calc, trajectory=trj_row_f, role=Role.OUTPUT
-        )
-        rows.extend([trj_row_f, ct_link])
-        strucs_f = Structure.from_trj_xyz(IRC_DIR / "irc/IRC_IRC_F_trj.xyz")
-        props_f = Properties.from_trj_xyz(IRC_DIR / "irc/IRC_IRC_F_trj.xyz")
-        for i, (struc, prop) in enumerate(zip(strucs_f, props_f, strict=True)):
-            if prop.energy_total is None:
-                msg = f"Energy not determined for IRC_F {i}."
-                raise ValueError(msg)
-            geo_row = utils.struc_to_geo(struc, spin=optts_geo.spin)
-            ct_link = GeometryTrajectoryLink(
-                geometry=geo_row, trajectory=trj_row_f, index=[i]
-            )
-            ene_row = PropertyValueRow(
-                property_kind_name=energy_property_kind.name,
-                calculation=irc_calc,
-                geometry=geo_row,
-                value=prop.energy_total,
-            )
-            rows.extend([geo_row, ct_link, ene_row])
-
-        # Add a ValidationRow to attach to the Step
-        stmt = (
-            select(StepRow)
-            .join(
-                target=StageRow,
-                onclause=col(StageRow.id) == col(StepRow.stage_id_ts),
-            )
-            .join(
-                target=StageStationaryLink,
-                onclause=col(StageStationaryLink.stage_id) == col(StageRow.id),
-            )
-            .join(
-                target=StationaryPointRow,
-                onclause=col(StationaryPointRow.id)
-                == col(StageStationaryLink.stationary_id),
-            )
-            .join(
-                target=CalculationRow,
-                onclause=col(CalculationRow.id)
-                == col(StationaryPointRow.calculation_id),
-            )
-            .where(
-                col(StageRow.is_ts),
-                col(StationaryPointRow.geometry_id) == optts_geo.id,
-                col(CalculationRow.model_id) == HF3C.id,
-            )
-        )
-        step_row = sess.scalars(stmt).first()
-        if step_row is None:
-            msg = "Could not identify Reaction step from 4_NEB."
-            raise LookupError(msg)
-
-        vld_row = ValidationRow(calculation=irc_calc, step=step_row, method="Full IRC")
-        rows.append(vld_row)
-
-        sess.add_all(rows)
-        sess.commit()
-        break
-
-# 2. Optimize backwards minima
-with db.session() as sess:
-    # Re-attach rows expired by the commit above
-    HF3C = sess.merge(HF3C)
-
-    # Merge relevant rows from IRC
-    irc_calc = sess.merge(irc_calc)
-    step_row = next(val.step for val in irc_calc.validations)
-    # Get conformer IDs from current stationary points in step
-    conf_ids = {
-        ident.value: stp.id
-        for stg in [step_row.stage1, step_row.stage2]
-        for stp in stg.stationaries
-        for ident in stp.identities
-        if ident.algorithm.name == "irmsd_conformer"
-    }
-    to_reconcile = {}
-    rows = []
-    for i, trj in enumerate([ctl.trajectory for ctl in irc_calc.trajectory_links]):
-        geos = [gtl.geometry for gtl in trj.geometry_links]
-        min_ene = min(
-            [
-                e
-                for g in geos
-                for e in utils.get_properties(g, energy_property_kind, HF3C)
-            ],
-            key=lambda e: float(e.value),
-        )
-        min_geo = min_ene.geometry
-
-        # Query for existing calculation
-        stmt = (
-            select(CalculationRow)
-            .join(
-                CalculationGeometryLink,
-                onclause=col(CalculationGeometryLink.calculation_id)
-                == col(CalculationRow.id),
-            )
-            .join(
-                GeometryRow,
-                onclause=col(GeometryRow.id)
-                == col(CalculationGeometryLink.geometry_id),
-            )
-            .where(
-                col(CalculationRow.model_id) == HF3C.id,
-                col(CalculationRow.calc_type) == CalcType.OPT,
-                col(GeometryRow.id) == min_geo.id,
-            )
-        )
-        opt_calc = sess.scalars(stmt).first()
-        if opt_calc is not None:
-            logger.info(
-                "Pre-existing OPT found (id = %s). Skipping calculation.",
-                opt_calc.id,
-            )
-            continue
-
-        logger.info("Beginning OPT calculation.")
-        opt_calc, _, opt_output = utils.run_calculation(
-            struc=min_geo,
-            work_dir=IRC_DIR / f"opt_{i}",
-            model=HF3C,
-            calc_type=CalcType.OPT,
-            calc_input=CalcInput(memory=args.memory, ncores=args.ncores),
-        )
-        # Link input Geometry to Calculation
-        cg_link_in = CalculationGeometryLink(
-            calculation=opt_calc, geometry=min_geo, role=Role.INPUT
-        )
-        sess.add_all([opt_calc, cg_link_in])
-
-        struc = opt_output.get_structure()
-        grad = opt_output.get_gradient(index=-2)  # Last gradient calculated
-        ene = opt_output.get_final_energy()
-
-        if not struc or not grad or not ene:
-            msg = "Optimization output did not return expected results."
-            raise ValueError(msg)
-
-        opt_geo = utils.struc_to_geo(struc, spin=min_geo.spin)
-        opt_ene = PropertyValueRow(
-            property_kind_name=energy_property_kind.name,
-            calculation=opt_calc,
-            geometry=opt_geo,
-            value=ene,
-        )
-        opt_gra = PropertyValueRow(
-            property_kind_name=gradient_property_kind.name,
-            calculation=opt_calc,
-            geometry=opt_geo,
-            value=grad,
-        )
-        opt_stp = StationaryPointRow(calculation=opt_calc, geometry=opt_geo, order=0)
-
-        cg_link_out = CalculationGeometryLink(
-            calculation=opt_calc, geometry=opt_geo, role=Role.OUTPUT
-        )
-
-        sess.add_all([opt_geo, opt_ene, opt_gra, opt_stp, cg_link_out])
-        sess.flush()  # Flush to generate the identities
-
-        # Check if the IRC end points match the original guesses
-        conf_id = next(
-            i.value for i in opt_stp.identities if i.algorithm.name == "irmsd_conformer"
-        )
-        if conf_id in conf_ids:
-            stp_id_old = conf_ids.pop(conf_id)
-            stmt = (
-                select(StationaryPointRow)
-                .join(
-                    CalculationRow,
-                    onclause=col(CalculationRow.id)
-                    == col(StationaryPointRow.calculation_id),
-                )
-                .where(
-                    col(StationaryPointRow.id) == stp_id_old,
-                    col(CalculationRow.model_id) == HF3C.id,
+            sess.add(
+                PropertyValueRow(
+                    property_kind_name="energy",
+                    calculation=irc.calculation,
+                    geometry=geo,
+                    value=energy,
                 )
             )
-            orig_stp = sess.scalars(stmt).one()
-            orig_stp.is_pseudo = False
-            sess.flush([orig_stp])
 
-            logger.info(
-                "Original stationary point %s was validated and kept.", stp_id_old
-            )
+        # Optimize the lowest point of the branch into a validated minimum
+        lowest, _ = min(frames, key=lambda frame: frame[1])
+        minimum = common.optimize(sess, lowest, hf3c, WORK_DIR / f"opt_{i}")
+        common.validate(sess, minimum, hf3c, WORK_DIR / f"freq_{i}")
+        minima.append(minimum)
 
-        else:
-            to_reconcile[conf_id] = opt_stp.id
+    # Flush to generate identities for the new minima. Identity rows are shared,
+    # so pair each stage's scan guess with the minimum it shares the most with.
+    sess.flush()
+    stages = [step.stage1, step.stage2]
+    guesses = [stage.stationaries[0] for stage in stages]
 
-    # Replace invalid stationary points
-    for (_, stp_id_new), (_, stp_id_old) in zip(
-        to_reconcile.items(), conf_ids.items(), strict=True
-    ):
-        stmt = (
-            select(StageStationaryLink)
-            .join(
-                target=StepRow,
-                onclause=or_(
-                    col(StepRow.stage_id1) == col(StageStationaryLink.stage_id),
-                    col(StepRow.stage_id2) == col(StageStationaryLink.stage_id),
-                ),
-            )
-            .where(
-                col(StageStationaryLink.stationary_id) == stp_id_old,
-                col(StepRow.id) == step_row.id,
-            )
-        )
-        ss_link: StageStationaryLink = sess.scalars(stmt).one()
-        # Swap the new stationary id for the old one in the stage link
-        ss_link.stationary_id = stp_id_new
-        sess.flush([ss_link])
+    def shared(a: StationaryPointRow, b: StationaryPointRow) -> set[str]:
+        """Names of the identity algorithms whose values two points share."""
+        ids = {i.id for i in b.identities}
+        return {i.algorithm.name for i in a.identities if i.id in ids}
 
-        logger.info(
-            "Replaced stationary point %s with %s for stage %s.",
-            stp_id_old,
-            stp_id_new,
-            ss_link.stage_id,
-        )
+    def score(pairs: list[StationaryPointRow]) -> int:
+        """Count the identities shared by the guesses and `pairs`."""
+        return sum(len(shared(g, m)) for g, m in zip(guesses, pairs, strict=True))
 
-    # Refresh step_row with the new relationships
-    sess.refresh(step_row)
-    # 3. Vibrational analysis
-    for i, geo in enumerate(
-        [
-            stp.geometry
-            for stg in [step_row.stage1, step_row.stage2]
-            for stp in stg.stationaries
-        ]
-    ):
-        logger.info("Beginning FREQ %s.", i)
-        freq_calc, _, freq_output = utils.run_calculation(
-            struc=geo,
-            work_dir=IRC_DIR / f"freq_{i}",
-            model=HF3C,
-            calc_type=CalcType.FREQ,
-            calc_input=CalcInput(memory=args.memory, ncores=args.ncores),
-        )
-        cg_link_in = CalculationGeometryLink(
-            calculation=freq_calc, geometry=geo, role=Role.INPUT
-        )
+    if score(minima[::-1]) > score(minima):
+        minima.reverse()
 
-        hess_tool = HessianTools(IRC_DIR / f"freq_{i}/Freq.hess")
-        modes = hess_tool.normalmodes
-        zpe = freq_output.get_zpe()
-        if zpe is None:
-            msg = "Zero point energy not determined."
-            raise ValueError(msg)
+    for stage, guess, minimum in zip(stages, guesses, minima, strict=True):
+        print(f"Stage {stage.id}: replacing scan guess with IRC minimum")
+        print(f"  shared identities: {sorted(shared(guess, minimum))}")
+        stage.stationaries = [minimum]
 
-        hess_row = PropertyValueRow(
-            property_kind_name=hessian_property_kind.name,
-            calculation=freq_calc,
-            geometry=geo,
-            value=modes,
-        )
-        zpe_row = PropertyValueRow(
-            property_kind_name=energy_property_kind.name,
-            calculation=freq_calc,
-            geometry=geo,
-            value=zpe,
-        )
-        rows.extend([freq_calc, cg_link_in, hess_row, zpe_row])
-
-    sess.add_all(rows)
     sess.commit()
-    sess.close()

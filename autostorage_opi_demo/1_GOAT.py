@@ -1,141 +1,56 @@
-"""Global Optimization of Pent2ene with the xTB model."""
+"""Step 1: Conformer search for trans-pent-2-ene.
+
+autostorage features: calculations linked to input/output geometries, property
+values, and stationary points that are automatically tagged with identities
+(InChI, SMILES, Hill formula, and the custom iRMSD conformer identity).
+"""
 
 import sys
 
 from automol import rdkit_inchi
 from autostorage import (
     CalculationGeometryLink,
-    CalculationRow,
     Database,
-    IdentityAlgorithmRow,
-    IdentityRow,
     PropertyValueRow,
     Role,
     StationaryPointRow,
-    energy_property_kind,
+    query,
 )
-from autostorage.models import IdentityStationaryLink
-from opi.input.structures import Structure
-from sqlmodel import col, select
 
-import const
-import ident  # noqa: F401 Ensures the custom identity is being added to registry
-import query
-import utils
-from const import HF3C, XTB, CalcInput, CalcType
+import common
+import orca
 
-parser = utils.get_parser()
-args = parser.parse_args()
-logger = utils.get_logger(__name__)
+WORK_DIR = common.OUT_DIR / "1_GOAT"
 
-# Build the working directory
-GOAT_DIR = const.OUT_DIR / "1_GOAT"
-GOAT_DIR.mkdir(exist_ok=True, parents=True)
+with Database(common.DB_PATH, echo=common.ARGS.verbose) as db, db.session() as sess:
+    # Identities make stored results easy to find, e.g. by InChI
+    stmt = query.stationary_point_by_identity(rdkit_inchi, common.PENT2ENE_INCHI)
+    if sess.exec(stmt).first() is not None:
+        print("Pent-2-ene conformers are already stored.")
+        sys.exit()
 
-# Initialize the database
-db = Database(const.OUT_DIR / "demo.db", echo=args.verbose)
+    xtb = common.get_or_create_model(sess, "XTB")
+    hf3c = common.get_or_create_model(sess, "HF-3c")
 
-# Pent2ene InChI for lookup
-pent2ene_inchi = "InChI=1S/C5H10/c1-3-5-4-2/h3,5H,4H2,1-2H3/b5-3+"
-
-with db.session() as sess:
-    # Query for existing xtb/hf-3c models or create new ones and add to session
-    XTB = query.get_or_create_model(sess, model=XTB)
-    HF3C = query.get_or_create_model(sess, model=HF3C)
-    sess.add_all([XTB, HF3C])
-
-    # Query whether the calculation exists by checking if pent2ene's InChI is tagged
-    # to a calculation with model_id==XTB.id and calc_type==CalcType.GOAT ("goat")
-    stmt = (
-        select(CalculationRow)
-        .join(
-            target=StationaryPointRow,
-            onclause=col(StationaryPointRow.calculation_id) == col(CalculationRow.id),
-        )  # Identity is linked to the Stationary
-        .join(
-            target=IdentityStationaryLink,
-            onclause=col(IdentityStationaryLink.stationary_id)
-            == col(StationaryPointRow.id),
-        )  # Need to include the link
-        .join(
-            target=IdentityRow,
-            onclause=col(IdentityRow.id) == col(IdentityStationaryLink.identity_id),
+    guess = common.from_smiles(common.PENT2ENE_SMILES)
+    goat = orca.run(guess, xtb, "goat", WORK_DIR / "goat")
+    sess.add(goat.calculation)
+    for i, (conf, _) in enumerate(goat.frames("goat.finalensemble.xyz")):
+        # Each conformer is an output geometry and a minimum (order 0)
+        goat.calculation.geometry_links.append(
+            CalculationGeometryLink(geometry=conf, role=Role.OUTPUT)
         )
-        .join(
-            target=IdentityAlgorithmRow,
-            onclause=col(IdentityAlgorithmRow.id) == col(IdentityRow.algorithm_id),
-        )
-        .where(
-            col(CalculationRow.model_id) == XTB.id,
-            col(CalculationRow.calc_type) == CalcType.GOAT,
-            col(IdentityRow.value) == pent2ene_inchi,
-            col(IdentityAlgorithmRow.name) == rdkit_inchi.name,
-        )
-    )
-    goat_calc: CalculationRow | None = sess.scalars(stmt).first()
-    if goat_calc is not None:
-        logger.info(
-            "Pre-existing GOAT calculation found (id = %s). Skipping calculation.",
-            goat_calc.id,
-        )
-        sys.exit(0)
+        sess.add(StationaryPointRow(calculation=goat.calculation, geometry=conf))
 
-    # Initialize Structure and GeometryRow
-    pent2ene_struc = Structure.from_smiles("CC=CCC")
-    pent2ene_geo = utils.struc_to_geo(pent2ene_struc)
-
-    logger.info("Beginning pent2ene GOAT calculation.")
-    goat_calc, goat_calculator, _ = utils.run_calculation(
-        struc=pent2ene_geo,
-        work_dir=GOAT_DIR / "goat",
-        model=XTB,
-        calc_type=CalcType.GOAT,
-        calc_input=CalcInput(memory=args.memory, ncores=args.ncores),
-    )
-    # Link input Geometry to Calculation
-    cgl_in = CalculationGeometryLink(
-        calculation=goat_calc, geometry=pent2ene_geo, role=Role.INPUT
-    )
-    rows = [goat_calc, pent2ene_geo, cgl_in]
-
-    for i, struc in enumerate(
-        Structure.from_trj_xyz(GOAT_DIR / "goat/goat.finalensemble.xyz")
-    ):
-        geo_row = utils.struc_to_geo(struc)
-        # Store the Geometry as a Stationary Point
-        stp_row = StationaryPointRow(calculation=goat_calc, geometry=geo_row, order=0)
-        # Link output Geometry to Calculation
-        cgl_out = CalculationGeometryLink(
-            calculation=goat_calc, geometry=geo_row, role=Role.OUTPUT
+        # Refine its energy with a more accurate model
+        ene = orca.run(conf, hf3c, "Energy", WORK_DIR / f"ene_{i}")
+        sess.add(
+            PropertyValueRow(
+                property_kind_name="energy",
+                calculation=ene.calculation,
+                geometry=conf,
+                value=ene.energy(),
+            )
         )
-        rows.extend([geo_row, stp_row, cgl_out])
 
-        # Compute the energies separately for a better profile vs. xTB
-        ene_calc, _, ene_output = utils.run_calculation(
-            struc=geo_row,
-            work_dir=GOAT_DIR / f"ene_{i}",
-            model=HF3C,
-            calc_type=CalcType.ENERGY,
-            calc_input=CalcInput(memory=args.memory, ncores=args.ncores),
-        )
-        cgl_in = CalculationGeometryLink(
-            calculation=ene_calc, geometry=geo_row, role=Role.INPUT
-        )
-        ene = ene_output.get_final_energy()
-        if ene is None:
-            msg = f"Energy not determined for conformer {i}."
-            raise ValueError(msg)
-
-        ene_row = PropertyValueRow(
-            property_kind_name=energy_property_kind.name,
-            calculation=ene_calc,
-            geometry=geo_row,
-            value=ene,
-        )
-        rows.extend([ene_calc, cgl_in, ene_row])
-
-    sess.add_all(rows)
-    # Flush and enter (commit) the new rows
-    # NOTE: It's safer and more efficient to commit once per session
     sess.commit()
-    sess.close()
