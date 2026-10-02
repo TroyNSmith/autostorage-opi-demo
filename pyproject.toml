@@ -5,9 +5,8 @@ description = "Demonstration of autostorage with ORCA (via OPI)."
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
 dependencies = [
-    # "autostorage==0.0.17",
-    "automol==0.0.26",
-    "autostorage",  # TEMP: local version (see [tool.uv.sources])
+    "autostorage==0.0.18",
+    "automol==0.0.27",
     "irmsd>=0.1.1",
     "orca-pi==2.0.0",
 ]
@@ -34,7 +33,3 @@ ignore = [
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
-
-[tool.uv.sources]
-autostorage = { path = "../autostorage", editable = true }  # TEMP
-# automol = { path = "../automol", editable = true }
