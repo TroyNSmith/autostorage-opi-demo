@@ -1,6 +1,3 @@
-# User settings
-.vscode/
-
 # UV environment
 .venv/
 uv.lock
