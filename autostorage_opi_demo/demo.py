@@ -13,8 +13,8 @@
 import sys
 from pathlib import Path
 
+import autogeom
 import py3Dmol
-from automol import geom, hill_formula, rdkit_inchi
 from autostorage import (
     AutostorageSession,
     CalculationGeometryLink,
@@ -29,7 +29,9 @@ from autostorage import (
     StepRow,
     TrajectoryRow,
     ValidationRow,
+    hill_formula,
     query,
+    rdkit_inchi,
 )
 from IPython import get_ipython
 from IPython.display import display
@@ -118,7 +120,7 @@ with db.session() as sess:
     for stp, ene in sorted(zip(conformers, energies, strict=True), key=lambda x: x[1]):
         rel = (ene - min(energies)) * HARTREE_TO_KCAL
         print(f"Conformer {stp.id}: {rel:.2f} kcal/mol")
-        show(geom.render_svg(stp.geometry))
+        show(autogeom.render_svg(stp.geometry))
 
 # %% [markdown]
 # ## Step 2: Optimize the lowest-energy conformer and the hydroxyl radical
@@ -166,8 +168,8 @@ def optimized(sess: AutostorageSession, inchi: str) -> GeometryRow:
 # The optimized reactants, labeled by atom index (H 10 is abstracted in step 3)
 with db.session() as sess:
     show(
-        geom.view(optimized(sess, common.PENT2ENE_INCHI), label=True),
-        geom.view(optimized(sess, common.HYDROXYL_INCHI), label=True),
+        autogeom.view(optimized(sess, common.PENT2ENE_INCHI), label=True),
+        autogeom.view(optimized(sess, common.HYDROXYL_INCHI), label=True),
     )
 
 # %% [markdown]
@@ -342,7 +344,7 @@ def transition_state(sess: AutostorageSession) -> StationaryPointRow:
 
 # The transition state, labeled by atom index (C 3 ... H 10 ... O 15)
 with db.session() as sess:
-    show(geom.view(transition_state(sess).geometry, label=True))
+    show(autogeom.view(transition_state(sess).geometry, label=True))
 
 # %% [markdown]
 # ## Step 5: Validate the reaction step with an IRC and refine its endpoints
@@ -458,7 +460,7 @@ with db.session() as sess:
         rel_ene = (ene - ref_ene) * HARTREE_TO_KCAL
         rel_zpe = (ene + zpe - ref_zpe) * HARTREE_TO_KCAL
         print(f"{name}: {rel_ene:.2f} kcal/mol ({rel_zpe:.2f} kcal/mol with ZPE)")
-        show(geom.render_svg(geo))
+        show(autogeom.render_svg(geo))
 
 # %%
 db.close()

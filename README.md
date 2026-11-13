@@ -10,7 +10,7 @@ ORCA (via OPI) does the quantum chemistry, but is kept out of the way in
 
 All steps live in one script, [`demo.py`](autostorage_opi_demo/demo.py),
 split into `# %%` cells. After each step, a cell visualizes its stored results
-with the viewers built into automol (`geom.view`, `geom.render_svg`) and
+with the viewers built into autogeom (`autogeom.view`, `autogeom.render_svg`) and
 autostorage (`TrajectoryRow.view`).
 
 | Step | Calculation | autostorage features | Visualization |

@@ -3,8 +3,8 @@
 import argparse
 from pathlib import Path
 
+import autogeom
 import numpy as np
-from automol import rdkit_smiles
 from autostorage import (
     AutostorageSession,
     CalculationGeometryLink,
@@ -53,7 +53,7 @@ def get_or_create_model(sess: AutostorageSession, method: str) -> ModelRow:
 
 def from_smiles(smiles: str) -> GeometryRow:
     """Embed a geometry from a SMILES string."""
-    return GeometryRow(**rdkit_smiles.geometry_fn(smiles).model_dump())
+    return GeometryRow(**autogeom.from_smiles(smiles).model_dump())
 
 
 def energy(geo: GeometryRow, model: ModelRow) -> float:

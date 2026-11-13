@@ -8,8 +8,14 @@ stationary point, and `zpe` values are validated like any built-in property.
 import uuid
 from collections.abc import Mapping
 
-from automol import AlgorithmRegistry, Geometry, IdentityKind, rdkit_inchi
-from autostorage import PropertyKindRegistry, energy_property_kind
+from autogeom import Geometry
+from autostorage import (
+    IdentityAlgorithmRegistry,
+    IdentityKind,
+    PropertyKindRegistry,
+    energy_property_kind,
+    rdkit_inchi,
+)
 from irmsd import Molecule, sorter_irmsd_molecule
 
 
@@ -32,11 +38,11 @@ def irmsd_identity_fn(
     return uuid.uuid4().hex
 
 
-irmsd_conformer = AlgorithmRegistry.register(
+irmsd_conformer = IdentityAlgorithmRegistry.register(
     name="irmsd_conformer",
     kind=IdentityKind.CONFORMER,
     identity_fn=irmsd_identity_fn,
-    parent_algorithm=rdkit_inchi,
+    parent=rdkit_inchi,
 )
 
 zpe_property_kind = PropertyKindRegistry.register(
