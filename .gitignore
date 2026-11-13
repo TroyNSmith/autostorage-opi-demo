@@ -9,4 +9,4 @@ uv.lock
 __pycache__/
 
 # SLURM
-slurm-*.out
+slurm-*.out*.egg-info/
