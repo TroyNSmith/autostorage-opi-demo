@@ -46,5 +46,7 @@ irmsd_conformer = IdentityAlgorithmRegistry.register(
 )
 
 zpe_property_kind = PropertyKindRegistry.register(
-    name="zpe", validation_fn=energy_property_kind.validation_fn
+    name="zpe",
+    validation_fn=energy_property_kind.validation_fn,
+    units=energy_property_kind.units,
 )

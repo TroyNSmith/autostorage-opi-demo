@@ -405,8 +405,12 @@ def step5_irc(sess: AutostorageSession) -> None:
 
     def shared(a: StationaryPointRow, b: StationaryPointRow) -> set[str]:
         """Names of the identity algorithms whose values two points share."""
-        ids = {i.id for i in b.identities}
-        return {i.algorithm.name for i in a.identities if i.id in ids}
+        ids = {link.identity_id for link in b.identity_links}
+        return {
+            link.identity.algorithm.name
+            for link in a.identity_links
+            if link.identity_id in ids
+        }
 
     def score(pairs: list[StationaryPointRow]) -> int:
         """Count the identities shared by the guesses and `pairs`."""
