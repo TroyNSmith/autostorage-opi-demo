@@ -17,6 +17,7 @@ import autogeom
 import py3Dmol
 from autostorage import (
     AutostorageSession,
+    AxisKind,
     CalculationGeometryLink,
     CalculationTrajectoryLink,
     Database,
@@ -27,6 +28,7 @@ from autostorage import (
     StageRow,
     StationaryPointRow,
     StepRow,
+    TrajectoryAxisRow,
     TrajectoryRow,
     ValidationRow,
     hill_formula,
@@ -63,10 +65,10 @@ def show(*objs: object) -> None:
 # %% [markdown]
 # ## Step 1: Conformer search for trans-pent-2-ene
 #
-# autostorage features: calculations linked to input/output geometries,
-# property values, and stationary points that are automatically tagged with
-# identities (InChI, SMILES, Hill formula, and the custom iRMSD conformer
-# identity).
+# autostorage features: calculations linked to input geometries and output
+# trajectories (here an unordered conformer ensemble), property values, and
+# stationary points that are automatically tagged with identities (InChI,
+# SMILES, Hill formula, and the custom iRMSD conformer identity).
 
 
 # %%
@@ -85,12 +87,15 @@ def step1_goat(sess: AutostorageSession) -> None:
 
     guess = common.from_smiles(common.PENT2ENE_SMILES)
     goat = orca.run(guess, xtb, "goat", work_dir / "goat")
+    # The conformer ensemble is an unordered trajectory (no index on its geometries)
+    ensemble = TrajectoryRow()
+    goat.calculation.trajectory_links.append(
+        CalculationTrajectoryLink(trajectory=ensemble, role=Role.OUTPUT)
+    )
     sess.add(goat.calculation)
     for i, (conf, _) in enumerate(goat.frames("goat.finalensemble.xyz")):
-        # Each conformer is an output geometry and a minimum (order 0)
-        goat.calculation.geometry_links.append(
-            CalculationGeometryLink(geometry=conf, role=Role.OUTPUT)
-        )
+        # Each conformer is a member of the ensemble and a minimum (order 0)
+        ensemble.geometry_links.append(GeometryTrajectoryLink(geometry=conf))
         sess.add(StationaryPointRow(calculation=goat.calculation, geometry=conf))
 
         # Refine its energy with a more accurate model
@@ -176,7 +181,7 @@ with db.session() as sess:
 # ## Step 3: Relaxed scan of H-abstraction from pent-2-ene by OH
 #
 # autostorage features: trajectories (ordered geometries linked to a
-# calculation) and pseudo stationary points, which queries skip by default.
+# calculation, with an axis for the scanned coordinate) and pseudo stationary points, which queries skip by default.
 
 
 # %%
@@ -222,7 +227,18 @@ def step3_scan(sess: AutostorageSession) -> None:
         work_dir / "scan",
         "%geom scan B 15 10 = 1.4, 1.0, 10 end end",
     )
-    trajectory = TrajectoryRow()
+    # The trajectory axis records the scanned O-H distance (atoms 15 and 10), so
+    # each scan point's value is measured from its geometry when it is flushed
+    trajectory = TrajectoryRow(
+        axes=[
+            TrajectoryAxisRow(
+                axis=0,
+                kind=AxisKind.DISTANCE,
+                keys=[15, 10],
+                label="Forming O-H distance",
+            )
+        ]
+    )
     scan.calculation.trajectory_links.append(
         CalculationTrajectoryLink(trajectory=trajectory, role=Role.OUTPUT)
     )
@@ -267,9 +283,11 @@ with db.session() as sess:
     scan_calc = next(stp.calculation for stp in sess.exec(stmt) if stp.is_pseudo)
     trajectory = scan_calc.trajectory_links[0].trajectory
     scan_geos = trajectory.geometries_along()
+    distances = trajectory.values_along()  # along the scanned O-H distance axis
     energies = [common.energy(geo, hf3c) for geo in scan_geos]
-    for i, ene in enumerate(energies):
-        print(f"Scan point {i}: {(ene - energies[0]) * HARTREE_TO_KCAL:.2f} kcal/mol")
+    for i, (dist, ene) in enumerate(zip(distances, energies, strict=True)):
+        rel = (ene - energies[0]) * HARTREE_TO_KCAL
+        print(f"Scan point {i}: O-H = {dist:.3f} Å, {rel:.2f} kcal/mol")
     show(trajectory.view())
 
 # %% [markdown]
@@ -283,7 +301,7 @@ with db.session() as sess:
 # %%
 def step4_ts(sess: AutostorageSession) -> None:
     """Optimize a TS from the highest scan point and add the reaction step."""
-    work_dir = common.OUT_DIR / "4_NEB"
+    work_dir = common.OUT_DIR / "4_TS"
 
     stmt = query.stationary_point_by_identity(
         hill_formula, common.COMPLEX_FORMULA, include_pseudo=True
