@@ -5,8 +5,8 @@ description = "Demonstration of autostorage with ORCA (via OPI)."
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [
-    "autostorage==0.0.21",
-    "autogeom==0.0.1",
+    "autostorage==0.0.22",
+    "autogeom==0.0.2",
     "irmsd>=0.1.1",
     "orca-pi==2.0.0",
 ]
